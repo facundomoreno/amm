@@ -25,8 +25,8 @@ const mockDataForTokensOwnedList = [
 
 export default function Home() {
   return (
-    <main className="">
-      <div className="flex items-center">
+    <main className="p-12">
+      <div className="flex">
         <div className="flex-1">
           <HistoricValuesChart />
         </div>

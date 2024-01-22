@@ -4,44 +4,50 @@ pragma solidity >=0.8.2 <0.9.0;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract Pool {
-    ERC20 public immutable token0;
-    ERC20 public immutable token1;
+    ERC20 public immutable stableCurrency;
+    ERC20 public immutable token;
 
-    uint public reserve0;
-    uint public reserve1;
+    uint256 public stableCurrencyReserve;
+    uint256 public tokenReserve;
 
-    uint public totalSupply;
+    uint256 public totalSupply;
     mapping(address => uint) public balanceOf;
 
-    constructor(address _token0, address _token1) {
-        token0 = ERC20(_token0);
-        token1 = ERC20(_token1);
+    constructor(
+        address _stableCurrency,
+        address _token,
+        uint256 _stableCurrencyReserve,
+        uint256 _tokenReserve
+    ) {
+        stableCurrency = ERC20(_stableCurrency);
+        token = ERC20(_token);
+        _update(_stableCurrencyReserve, _tokenReserve);
     }
 
-    function _update(uint _reserve0, uint _reserve1) private {
-        reserve0 = _reserve0;
-        reserve1 = _reserve1;
+    function _update(uint _stableCurrencyReserve, uint _tokenReserve) private {
+        stableCurrencyReserve = _stableCurrencyReserve;
+        tokenReserve = _tokenReserve;
     }
 
     function swap(
         address _tokenIn,
-        uint _amountIn
+        uint256 _amountIn
     ) external returns (uint amountOut) {
         require(
-            _tokenIn == address(token0) || _tokenIn == address(token1),
+            _tokenIn == address(stableCurrency) || _tokenIn == address(token),
             "invalid token"
         );
         require(_amountIn > 0, "amount in = 0");
 
-        bool isToken0 = _tokenIn == address(token0);
+        bool isstableCurrency = _tokenIn == address(stableCurrency);
         (
             ERC20 tokenIn,
             ERC20 tokenOut,
-            uint reserveIn,
-            uint reserveOut
-        ) = isToken0
-                ? (token0, token1, reserve0, reserve1)
-                : (token1, token0, reserve1, reserve0);
+            uint256 reserveIn,
+            uint256 reserveOut
+        ) = isstableCurrency
+                ? (stableCurrency, token, stableCurrencyReserve, tokenReserve)
+                : (token, stableCurrency, tokenReserve, stableCurrencyReserve);
 
         tokenIn.transferFrom(msg.sender, address(this), _amountIn);
 
@@ -57,7 +63,8 @@ contract Pool {
         ydx / (x + dx) = dy
         */
         // 0.3% fee
-        uint amountInWithFee = (_amountIn * 997) / 1000;
+
+        uint256 amountInWithFee = _amountIn;
         amountOut =
             (reserveOut * amountInWithFee) /
             (reserveIn + amountInWithFee);
@@ -65,8 +72,8 @@ contract Pool {
         tokenOut.transfer(msg.sender, amountOut);
 
         _update(
-            token0.balanceOf(address(this)),
-            token1.balanceOf(address(this))
+            stableCurrency.balanceOf(address(this)),
+            token.balanceOf(address(this))
         );
     }
 }

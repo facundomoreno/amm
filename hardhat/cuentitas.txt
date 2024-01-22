@@ -1,0 +1,28 @@
+Somos p cuentas
+Hay t tokens particulares, 1 token general
+Queremos que un token particular = C Generales
+
+Entonces hay t pools (una por token particular).
+Queremos que cada pool tenga: 
+    #t de tokens particulares
+    #t*C de token general
+    -> Esto es lo que define que cada token T vale C Generales
+        T vale #t*C / #t = C Generales
+
+Queremos que cada usuario tenga inicialmente 3*C Generales 
+    -> (Osea puede comprar 3 unidades de un token particular)
+
+Entonces tenemos que generar
+
+    Para cada token particular: #t unidades
+    Para el token general: p*3*C + #t*C*t
+
+Para este caso de uso, definimos que:
+
+    #t = 20
+    C = 1000
+    p = 11
+
+    Entonces:
+        Para cada token particular: Generar 20 unidades
+        Para el token general: Generar 253000 unidades

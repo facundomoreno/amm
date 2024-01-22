@@ -3,11 +3,14 @@ pragma solidity >=0.8.2 <0.9.0;
 
 import "./Token.sol";
 import "./Pool.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 error AMMController_UserAlreadyRegistered();
 error AMMController_UsernameInUse();
 error AMMController_OnlyOwnerCanCallThisFunction();
 error AMMController_InvalidTokenPair();
+error AMMController_StableCurrencyIsRequired();
+error AMMController_InsufficientFunds();
 
 contract AMMController {
     struct User {
@@ -17,7 +20,11 @@ contract AMMController {
     }
 
     struct TokenCreationProps {
-        uint256 initialSupply;
+        string name;
+        string tag;
+    }
+    struct GetAllTokensReturns {
+        address tokenAddress;
         string name;
         string tag;
     }
@@ -27,26 +34,54 @@ contract AMMController {
     address private owner;
     address private stableCurrency;
 
-    mapping(address => User) users;
-    mapping(string => bool) usedUsernames;
-    mapping(address => mapping(address => uint256)) userTokenBalance;
-
+    uint256 private initialTokensForUsers;
+    uint256 private limitNumberOfUsers;
     uint256 private usersCount;
-
-    mapping(uint256 => address) tokens;
-
     uint256 private tokensCount;
+    uint256 private initialConversionRateFromTokenToStable;
 
-    mapping(address => address) tokenToPool;
+    mapping(address => User) private users;
+    mapping(string => bool) private usedUsernames;
+    mapping(address => mapping(address => uint256)) private userTokenBalance;
+    mapping(address => uint) private userStableCurrencyBalance;
+    mapping(uint256 => address) private tokens;
+    mapping(address => address) private tokenToPool;
 
-    constructor(TokenCreationProps memory _stableCurrency) {
+    constructor(
+        TokenCreationProps[] memory _tokens, // T = 11
+        TokenCreationProps memory _stableCurrency, // Supply = 253000
+        uint256 _initialSupplyForTokens, // #T = 20
+        uint256 _initialConversionRateFromTokenToStable, // C = 1000
+        uint256 _limitNumberOfUsers, // p = 11
+        uint256 _initialTokensForUsers // 3,
+    ) {
         //AMM controller es dueño de todo el stableToken
         owner = msg.sender;
+
+        initialConversionRateFromTokenToStable = _initialConversionRateFromTokenToStable;
+        limitNumberOfUsers = _limitNumberOfUsers;
+        initialTokensForUsers = _initialTokensForUsers;
+
+        uint256 supplyForStableCurrency = (_limitNumberOfUsers *
+            _initialTokensForUsers *
+            _initialConversionRateFromTokenToStable) +
+            (_initialSupplyForTokens *
+                _initialConversionRateFromTokenToStable *
+                _tokens.length);
+
         stableCurrency = createStableCurrency(
-            _stableCurrency.initialSupply,
+            supplyForStableCurrency,
             _stableCurrency.name,
             _stableCurrency.tag
         );
+
+        for (uint256 i = 0; i < _tokens.length; i++) {
+            createToken(
+                _initialSupplyForTokens,
+                _tokens[i].name,
+                _tokens[i].tag
+            );
+        }
     }
 
     function createUser(string memory _username) public {
@@ -63,6 +98,17 @@ contract AMMController {
         usedUsernames[_username] = true;
 
         usersCount++;
+
+        ERC20 erc20StableCurrency = ERC20(stableCurrency);
+
+        erc20StableCurrency.transfer(
+            msg.sender,
+            initialTokensForUsers * initialConversionRateFromTokenToStable
+        );
+
+        userStableCurrencyBalance[msg.sender] =
+            initialTokensForUsers *
+            initialConversionRateFromTokenToStable;
     }
 
     function createToken(
@@ -73,13 +119,33 @@ contract AMMController {
         if (msg.sender != owner) {
             revert AMMController_OnlyOwnerCanCallThisFunction();
         }
+        if (stableCurrency == address(0)) {
+            revert AMMController_StableCurrencyIsRequired();
+        }
 
-        //AmmController es dueño de todo el token
-        address newToken = address(
-            new Token(msg.sender, initialSupply, name, tag)
+        //Supuestamente AmmController es dueño de todo el token
+
+        address newToken = address(new Token(initialSupply, name, tag));
+
+        uint256 tokenReserve = initialSupply;
+        uint256 stableCurrencyReserve = initialSupply *
+            initialConversionRateFromTokenToStable;
+
+        address newPool = address(
+            new Pool(
+                stableCurrency,
+                newToken,
+                stableCurrencyReserve,
+                tokenReserve
+            )
         );
 
-        address newPool = address(new Pool(stableCurrency, newToken));
+        // Le mando stable y tokens a la pool?
+        ERC20 erc20NewToken = ERC20(newToken);
+        ERC20 erc20StableCurrency = ERC20(stableCurrency);
+
+        erc20NewToken.transfer(newPool, tokenReserve);
+        erc20StableCurrency.transfer(newPool, stableCurrencyReserve);
 
         tokens[tokensCount] = newToken;
         tokenToPool[newToken] = newPool;
@@ -99,42 +165,72 @@ contract AMMController {
         if (msg.sender != owner) {
             revert AMMController_OnlyOwnerCanCallThisFunction();
         }
-        address newToken = address(
-            new Token(msg.sender, initialSupply, name, tag)
-        );
+        address newToken = address(new Token(initialSupply, name, tag));
 
         return newToken;
     }
 
-    // Trading function to interact with the corresponding pool contract
-    //Ver como hacer para detectar cual es el stable e ir a la pool del token!!!!!!
     function tradeTokens(
         address fromToken,
         address toToken,
-        bool fromIsStable,
         uint256 amount
     ) external {
-        // Validate inputs, check user balances, etc.
+        if (getUserBalanceInToken(msg.sender, fromToken) < amount) {
+            revert AMMController_InsufficientFunds();
+        }
 
-        // Get the pool contract address for the token pair
+        if (
+            !((fromToken == stableCurrency &&
+                tokenToPool[toToken] != address(0)) ||
+                (toToken == stableCurrency &&
+                    tokenToPool[fromToken] != address(0)))
+        ) {
+            revert AMMController_InvalidTokenPair();
+        }
+
         address poolAddress;
 
-        if (fromIsStable) {
+        if (tokenToPool[fromToken] == address(0)) {
             poolAddress = tokenToPool[toToken];
         } else {
             poolAddress = tokenToPool[fromToken];
         }
 
-        if (poolAddress == address(0)) {
-            revert AMMController_InvalidTokenPair();
-        }
-
-        // Interact with the pool contract to execute the trade
         Pool poolContract = Pool(poolAddress);
         poolContract.swap(fromToken, amount);
 
-        // Update user balances, emit events, etc.
+        userTokenBalance[msg.sender][fromToken] -= amount;
+        // userTokenBalance[msg.sender][toToken] += actualReceivedAmount;
+
+        // emit TradeExecuted(msg.sender, fromToken, toToken, amount, actualReceivedAmount);
     }
 
-    // Liquidity provision function to interact with the corresponding pool contract
+    function getUserBalanceInToken(
+        address _userAddress,
+        address _token
+    ) public view returns (uint256) {
+        ERC20 tokenToCheck = ERC20(_token);
+        return tokenToCheck.balanceOf(_userAddress);
+    }
+
+    function getAllTokens() public view returns (GetAllTokensReturns[] memory) {
+        GetAllTokensReturns[] memory tokensDataList = new GetAllTokensReturns[](
+            tokensCount
+        );
+        for (uint256 i = 0; i < tokensCount; i++) {
+            ERC20 tokenX = ERC20(tokens[i]);
+            tokensDataList[i].tokenAddress = tokens[i];
+            tokensDataList[i].name = tokenX.name();
+            tokensDataList[i].tag = tokenX.symbol();
+        }
+        return tokensDataList;
+    }
+
+    function getPoolForToken(address token) public view returns (address) {
+        return tokenToPool[token];
+    }
+
+    function getStableCurrency() public view returns (address) {
+        return stableCurrency;
+    }
 }
