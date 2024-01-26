@@ -95,12 +95,17 @@ import { ethers, network } from "hardhat";
 
             assert.equal(
               poolStableCurrencyReserve.toString(),
-              Number(balanceOfPoolInStableCurrency).toString()
+              Number(balanceOfPoolInStableCurrency).toString(),
+              (
+                ammControllerConstructorArguments[3] *
+                ammControllerConstructorArguments[4]
+              ).toString()
             );
 
             assert.equal(
               poolTokenReserve.toString(),
-              Number(balanceOfPoolInToken).toString()
+              Number(balanceOfPoolInToken).toString(),
+              ammControllerConstructorArguments[3].toString()
             );
           }
         });
