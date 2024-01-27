@@ -1,5 +1,5 @@
 import { Contract } from "ethers";
-import { ammControllerConstructorArguments } from "../../utils/deployData";
+import { ammControllerConstructorArguments as ammCArgs } from "../../utils/deployData";
 
 import { assert, expect } from "chai";
 
@@ -21,22 +21,27 @@ import { ethers, network } from "hardhat";
         const [deployerResult] = await ethers.getSigners();
         deployer = deployerResult;
 
-        // // deploy all
+        const {
+          tokens,
+          stableCurrency,
+          initialSupplyForTokens,
+          initialConversionFromTokenToStable,
+          limitNumberOfUsers,
+          initialBuyOptionsOfTokensForUsers,
+        } = ammCArgs;
 
-        // await deployments.fixture("all");
+        const args = [
+          tokens,
+          stableCurrency,
+          initialSupplyForTokens,
+          initialConversionFromTokenToStable,
+          limitNumberOfUsers,
+          initialBuyOptionsOfTokensForUsers,
+        ];
 
-        // // get addresses of deployments
-
-        // ammControllerAddress = (await deployments.get("AMMController")).address;
-
-        // // get the ethers connection to the contract by each address
-
-        // ammControllerContract = (
-        //   await ethers.getContractAt("AMMController", ammControllerAddress)
-        // ).connect(deployer);
         ammControllerContract = await ethers.deployContract(
           "AMMController",
-          ammControllerConstructorArguments
+          args
         );
 
         await ammControllerContract.waitForDeployment();
@@ -46,18 +51,14 @@ import { ethers, network } from "hardhat";
 
       describe("Contract initialization", () => {
         it("Create tokens correctly", async () => {
-          await ammControllerContract.connect(deployer);
-
           const tokens = await ammControllerContract.getAllTokens();
 
-          assert(
+          assert.equal(
             tokens.length.toString(),
-            ammControllerConstructorArguments[0].length.toString()
+            ammCArgs.tokens.length.toString()
           );
         });
         it("Create pools correctly, with the initial balance", async () => {
-          await ammControllerContract.connect(deployer);
-
           const tokens = await ammControllerContract.getAllTokens();
 
           for (var i = 0; i < tokens.length; i++) {
@@ -66,7 +67,7 @@ import { ethers, network } from "hardhat";
               tokens[i][0]
             );
 
-            const poolContract = await await ethers.getContractAt(
+            const poolContract = await ethers.getContractAt(
               "Pool",
               poolAddress
             );
@@ -95,19 +96,106 @@ import { ethers, network } from "hardhat";
 
             assert.equal(
               poolStableCurrencyReserve.toString(),
-              Number(balanceOfPoolInStableCurrency).toString(),
+              Number(balanceOfPoolInStableCurrency).toString()
+            );
+
+            assert.equal(
+              poolStableCurrencyReserve.toString(),
               (
-                ammControllerConstructorArguments[3] *
-                ammControllerConstructorArguments[4]
+                ammCArgs.initialConversionFromTokenToStable *
+                ammCArgs.initialSupplyForTokens
               ).toString()
             );
 
             assert.equal(
               poolTokenReserve.toString(),
-              Number(balanceOfPoolInToken).toString(),
-              ammControllerConstructorArguments[3].toString()
+              Number(balanceOfPoolInToken).toString()
+            );
+
+            assert.equal(
+              poolTokenReserve.toString(),
+              ammCArgs.initialSupplyForTokens.toString()
             );
           }
         });
       });
+
+      describe("User creation", () => {
+        it("create user correctly, with stable currency balance", async () => {
+          const signers = await ethers.getSigners();
+          const user = signers[1];
+
+          await ammControllerContract.connect(user).createUser("Facu");
+
+          const newUserTokenBalance =
+            await ammControllerContract.getUserBalanceInStableCurrency(
+              user.address
+            );
+
+          const stableCurrencyContract = await ethers.getContractAt(
+            "Token",
+            stableCurrencyAddress
+          );
+
+          const balanceOfUserInStableCurrencyERC20Contract =
+            await stableCurrencyContract.balanceOf(user.address);
+
+          assert.equal(
+            newUserTokenBalance.toString(),
+            ammCArgs.initialConversionFromTokenToStable *
+              ammCArgs.initialBuyOptionsOfTokensForUsers
+          );
+          assert.equal(
+            newUserTokenBalance.toString(),
+            balanceOfUserInStableCurrencyERC20Contract
+          );
+        });
+        it("fails if the limit of users is exceded", async () => {
+          const signers = await ethers.getSigners();
+
+          for (var i = 0; i < ammCArgs.limitNumberOfUsers; i++) {
+            const user = signers[i + 1];
+            await ammControllerContract.connect(user).createUser(`User${i}`);
+
+            const newUserTokenBalance =
+            await ammControllerContract.getUserBalanceInStableCurrency(
+              user.address
+            );
+
+
+            assert.equal(
+              newUserTokenBalance.toString(),
+              ammCArgs.initialConversionFromTokenToStable *
+                ammCArgs.initialBuyOptionsOfTokensForUsers
+            );
+          }
+
+          // extra invalid user
+
+          const extraUser = signers[ammCArgs.limitNumberOfUsers + 2];
+
+          await expect(
+            ammControllerContract
+              .connect(extraUser)
+              .createUser(`User${ammCArgs.limitNumberOfUsers + 2}`)
+          ).to.be.rejectedWith("AMMController__LimitOfUsersExceded");
+        });
+        it("fails if user is already registered", async () => {
+          const signers = await ethers.getSigners();
+          const user = signers[1];
+          await ammControllerContract.connect(user).createUser(`Facu`);
+          await expect(ammControllerContract.connect(user).createUser(`Facu2`)).to.be.rejectedWith("AMMController_UserAlreadyRegistered");
+        });
+        it("fails if username is used", async () => {
+          const signers = await ethers.getSigners();
+          const user1 = signers[1];
+          const user2 = signers[2];
+          await ammControllerContract.connect(user1).createUser(`Facu`);
+          await expect(ammControllerContract.connect(user2).createUser(`Facu`)).to.be.rejectedWith("AMMController_UsernameInUse")
+        });
+      });
+
+      describe("Tokens trading", () => {
+        
+      })
     });

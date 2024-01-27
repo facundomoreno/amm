@@ -11,6 +11,7 @@ error AMMController_OnlyOwnerCanCallThisFunction();
 error AMMController_InvalidTokenPair();
 error AMMController_StableCurrencyIsRequired();
 error AMMController_InsufficientFunds();
+error AMMController__LimitOfUsersExceded();
 
 contract AMMController {
     struct User {
@@ -30,6 +31,13 @@ contract AMMController {
     }
 
     event TokenAdded(address newToken, address marketStableCurrency);
+    event TradeExecuted(
+        address negotiator,
+        address fromToken,
+        address toToken,
+        uint256 amountIn,
+        uint256 amountOutReceived
+    );
 
     address private owner;
     address private stableCurrency;
@@ -92,6 +100,9 @@ contract AMMController {
         if (usedUsernames[_username]) {
             revert AMMController_UsernameInUse();
         }
+        if (limitNumberOfUsers <= usersCount) {
+            revert AMMController__LimitOfUsersExceded();
+        }
         userToCreate.id = usersCount;
         userToCreate.username = _username;
         userToCreate.isRegistered = true;
@@ -100,30 +111,22 @@ contract AMMController {
         usersCount++;
 
         ERC20 erc20StableCurrency = ERC20(stableCurrency);
-
-        erc20StableCurrency.transfer(
-            msg.sender,
-            initialTokensForUsers * initialConversionRateFromTokenToStable
-        );
-
-        userStableCurrencyBalance[msg.sender] =
-            initialTokensForUsers *
+        uint256 initialCurrencyForUser = initialTokensForUsers *
             initialConversionRateFromTokenToStable;
+
+        erc20StableCurrency.transfer(msg.sender, initialCurrencyForUser);
+
+        userStableCurrencyBalance[msg.sender] = initialCurrencyForUser;
     }
 
     function createToken(
         uint256 initialSupply,
         string memory name,
         string memory tag
-    ) public payable returns (address) {
-        if (msg.sender != owner) {
-            revert AMMController_OnlyOwnerCanCallThisFunction();
-        }
+    ) private returns (address) {
         if (stableCurrency == address(0)) {
             revert AMMController_StableCurrencyIsRequired();
         }
-
-        //Supuestamente AmmController es dueño de todo el token
 
         address newToken = address(new Token(initialSupply, name, tag));
 
@@ -140,7 +143,6 @@ contract AMMController {
             )
         );
 
-        // Le mando stable y tokens a la pool?
         ERC20 erc20NewToken = ERC20(newToken);
         ERC20 erc20StableCurrency = ERC20(stableCurrency);
 
@@ -161,10 +163,7 @@ contract AMMController {
         uint256 initialSupply,
         string memory name,
         string memory tag
-    ) public payable returns (address) {
-        if (msg.sender != owner) {
-            revert AMMController_OnlyOwnerCanCallThisFunction();
-        }
+    ) private returns (address) {
         address newToken = address(new Token(initialSupply, name, tag));
 
         return newToken;
@@ -173,9 +172,9 @@ contract AMMController {
     function tradeTokens(
         address fromToken,
         address toToken,
-        uint256 amount
-    ) external {
-        if (getUserBalanceInToken(msg.sender, fromToken) < amount) {
+        uint256 amountIn
+    ) public {
+        if (getUserBalanceInToken(msg.sender, fromToken) < amountIn) {
             revert AMMController_InsufficientFunds();
         }
 
@@ -196,21 +195,47 @@ contract AMMController {
             poolAddress = tokenToPool[fromToken];
         }
 
+        userApproveTransfer(fromToken, amountIn, poolAddress);
+
         Pool poolContract = Pool(poolAddress);
-        poolContract.swap(fromToken, amount);
+        uint256 amountOutReceived = poolContract.swap(
+            fromToken,
+            amountIn,
+            msg.sender
+        );
 
-        userTokenBalance[msg.sender][fromToken] -= amount;
-        // userTokenBalance[msg.sender][toToken] += actualReceivedAmount;
+        userTokenBalance[msg.sender][fromToken] -= amountIn;
+        userTokenBalance[msg.sender][toToken] += amountOutReceived;
 
-        // emit TradeExecuted(msg.sender, fromToken, toToken, amount, actualReceivedAmount);
+        emit TradeExecuted(
+            msg.sender,
+            fromToken,
+            toToken,
+            amountIn,
+            amountOutReceived
+        );
+    }
+
+    function userApproveTransfer(
+        address _token,
+        uint256 _amount,
+        address _spender
+    ) public {
+        ERC20 token = ERC20(_token);
+        token.approve(_spender, _amount);
     }
 
     function getUserBalanceInToken(
         address _userAddress,
         address _token
     ) public view returns (uint256) {
-        ERC20 tokenToCheck = ERC20(_token);
-        return tokenToCheck.balanceOf(_userAddress);
+        return userTokenBalance[_userAddress][_token];
+    }
+
+    function getUserBalanceInStableCurrency(
+        address _userAddress
+    ) public view returns (uint256) {
+        return userStableCurrencyBalance[_userAddress];
     }
 
     function getAllTokens() public view returns (GetAllTokensReturns[] memory) {
@@ -226,8 +251,8 @@ contract AMMController {
         return tokensDataList;
     }
 
-    function getPoolForToken(address token) public view returns (address) {
-        return tokenToPool[token];
+    function getPoolForToken(address _token) public view returns (address) {
+        return tokenToPool[_token];
     }
 
     function getStableCurrency() public view returns (address) {

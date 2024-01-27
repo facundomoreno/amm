@@ -3,15 +3,17 @@ pragma solidity >=0.8.2 <0.9.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
+error Pool_OnlyOwnerCanCallThisFunction();
+
 contract Pool {
     ERC20 public immutable stableCurrency;
     ERC20 public immutable token;
 
+    address owner;
+
     uint256 public stableCurrencyReserve;
     uint256 public tokenReserve;
-
     uint256 public totalSupply;
-    mapping(address => uint) public balanceOf;
 
     constructor(
         address _stableCurrency,
@@ -22,6 +24,7 @@ contract Pool {
         stableCurrency = ERC20(_stableCurrency);
         token = ERC20(_token);
         _update(_stableCurrencyReserve, _tokenReserve);
+        owner = msg.sender;
     }
 
     function _update(uint _stableCurrencyReserve, uint _tokenReserve) private {
@@ -31,8 +34,12 @@ contract Pool {
 
     function swap(
         address _tokenIn,
-        uint256 _amountIn
+        uint256 _amountIn,
+        address _negotiator
     ) external returns (uint amountOut) {
+        if(msg.sender != owner) {
+            revert Pool_OnlyOwnerCanCallThisFunction();
+        }
         require(
             _tokenIn == address(stableCurrency) || _tokenIn == address(token),
             "invalid token"
@@ -49,7 +56,9 @@ contract Pool {
                 ? (stableCurrency, token, stableCurrencyReserve, tokenReserve)
                 : (token, stableCurrency, tokenReserve, stableCurrencyReserve);
 
-        tokenIn.transferFrom(msg.sender, address(this), _amountIn);
+
+        // en AMMController el negociador aprueba a la pool a gastar esto de su cuenta
+        tokenIn.transferFrom(_negotiator, address(this), _amountIn);
 
         /*
         How much dy for dx?
@@ -64,16 +73,27 @@ contract Pool {
         */
         // 0.3% fee
 
-        uint256 amountInWithFee = _amountIn;
         amountOut =
-            (reserveOut * amountInWithFee) /
-            (reserveIn + amountInWithFee);
+            (reserveOut * _amountIn) /
+            (reserveIn + _amountIn);
 
-        tokenOut.transfer(msg.sender, amountOut);
+    
+        tokenOut.transfer(_negotiator, amountOut);
 
         _update(
             stableCurrency.balanceOf(address(this)),
             token.balanceOf(address(this))
         );
+
+        return amountOut;
+    }
+
+    function getStableCurrencyReserve() public view returns(uint256) {
+        return stableCurrencyReserve;
+    }
+
+     function getTokenReserve() public view returns(uint256) {
+        return tokenReserve;
     }
 }
+

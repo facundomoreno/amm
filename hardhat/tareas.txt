@@ -1,0 +1,17 @@
+Facu: 
+    Sistema de creacion de usuarios. Automaticamente, vos solo pones la contraseña que te pasa el owner.
+    ver como hacen en thirdweb, ahi está la posta
+
+    Desde la pool tener una función que te devuelve los balances y llamarlo desde ammCOntroller cuando lo pide
+    el usuario. Precio instantanteo de $Polo es la cant de Mut en la pool / lo que hay de polo en esa misma pool
+
+Polo:
+
+    Ver cuales son las cantidades óptimas de tokens y stable currency iniciales. Cuentitas
+
+    Api para ver el historial de precios. (Le pega cada cierto tiempo a las funciones de reservas)
+
+    La diferencia entre Polo y Mut es para que el precio pueda variar. El alto supply de Polo es para que puedas
+    comprar "fracciones"
+
+

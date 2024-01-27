@@ -11,7 +11,23 @@ module.exports = async function ({ getNamedAccounts, deployments }: any) {
   const { deploy, log } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const args = ammControllerConstructorArguments;
+  const {
+    tokens,
+    stableCurrency,
+    initialSupplyForTokens,
+    initialConversionFromTokenToStable,
+    limitNumberOfUsers,
+    initialBuyOptionsOfTokensForUsers,
+  } = ammControllerConstructorArguments;
+
+  const args = [
+    tokens,
+    stableCurrency,
+    initialSupplyForTokens,
+    initialConversionFromTokenToStable,
+    limitNumberOfUsers,
+    initialBuyOptionsOfTokensForUsers,
+  ];
 
   const ammControllerContract = await deploy("AMMController", {
     from: deployer,
