@@ -16,10 +16,11 @@ import { ethers, network } from "hardhat";
       let ammControllerAddress: string;
       let deployer: any;
       let stableCurrencyAddress: string;
+      let signers: any;
 
       beforeEach(async () => {
-        const [deployerResult] = await ethers.getSigners();
-        deployer = deployerResult;
+        signers = await ethers.getSigners();
+        deployer = signers[0];
 
         const {
           tokens,
@@ -122,7 +123,6 @@ import { ethers, network } from "hardhat";
 
       describe("User creation", () => {
         it("create user correctly, with stable currency balance", async () => {
-          const signers = await ethers.getSigners();
           const user = signers[1];
 
           await ammControllerContract.connect(user).createUser("Facu");
@@ -151,17 +151,14 @@ import { ethers, network } from "hardhat";
           );
         });
         it("fails if the limit of users is exceded", async () => {
-          const signers = await ethers.getSigners();
-
           for (var i = 0; i < ammCArgs.limitNumberOfUsers; i++) {
             const user = signers[i + 1];
             await ammControllerContract.connect(user).createUser(`User${i}`);
 
             const newUserTokenBalance =
-            await ammControllerContract.getUserBalanceInStableCurrency(
-              user.address
-            );
-
+              await ammControllerContract.getUserBalanceInStableCurrency(
+                user.address
+              );
 
             assert.equal(
               newUserTokenBalance.toString(),
@@ -184,18 +181,79 @@ import { ethers, network } from "hardhat";
           const signers = await ethers.getSigners();
           const user = signers[1];
           await ammControllerContract.connect(user).createUser(`Facu`);
-          await expect(ammControllerContract.connect(user).createUser(`Facu2`)).to.be.rejectedWith("AMMController_UserAlreadyRegistered");
+          await expect(
+            ammControllerContract.connect(user).createUser(`Facu2`)
+          ).to.be.rejectedWith("AMMController_UserAlreadyRegistered");
         });
         it("fails if username is used", async () => {
           const signers = await ethers.getSigners();
           const user1 = signers[1];
           const user2 = signers[2];
           await ammControllerContract.connect(user1).createUser(`Facu`);
-          await expect(ammControllerContract.connect(user2).createUser(`Facu`)).to.be.rejectedWith("AMMController_UsernameInUse")
+          await expect(
+            ammControllerContract.connect(user2).createUser(`Facu`)
+          ).to.be.rejectedWith("AMMController_UsernameInUse");
         });
       });
 
       describe("Tokens trading", () => {
-        
-      })
+        beforeEach(async () => {
+          for (var i = 0; i < ammCArgs.limitNumberOfUsers; i++) {
+            const newUser = signers[i + 1];
+            await ammControllerContract.connect(newUser).createUser(`User${i}`);
+          }
+        });
+        it("execute swap function correctly", async () => {
+          const trader = signers[1];
+
+          const tokenToReceiveAddress = (
+            await ammControllerContract.getAllTokens()
+          )[0][0];
+
+          // trader gasta todo su stable inicial en un token
+          await ammControllerContract
+            .connect(trader)
+            .tradeTokens(
+              stableCurrencyAddress,
+              tokenToReceiveAddress,
+              ammCArgs.initialConversionFromTokenToStable *
+                ammCArgs.initialBuyOptionsOfTokensForUsers
+            );
+
+          const stableCurrencyContract = await ethers.getContractAt(
+            "Token",
+            stableCurrencyAddress
+          );
+          const tokenContract = await ethers.getContractAt(
+            "Token",
+            tokenToReceiveAddress
+          );
+
+          const balanceOfUserInStableCurrencyERC20Contract =
+            await stableCurrencyContract.balanceOf(trader.address);
+
+          const balanceOfUserInStableCurrencyInsideAmmC =
+            await ammControllerContract.getUserBalanceInStableCurrency(
+              trader.address
+            );
+
+          const balanceOfUserInTokenERC20Contract =
+            await tokenContract.balanceOf(trader.address);
+
+          const balanceOfUserInTokenInsideAmmC =
+            await ammControllerContract.getUserBalanceInToken(
+              tokenToReceiveAddress,
+              trader.address
+            );
+
+          assert.equal(
+            "0",
+            balanceOfUserInStableCurrencyERC20Contract.toString()
+          );
+          assert.equal(balanceOfUserInStableCurrencyERC20Contract, balanceOfUserInStableCurrencyInsideAmmC)
+
+          assert.isAbove(0, Number(balanceOfUserInTokenERC20Contract))
+          assert.equal(balanceOfUserInTokenERC20Contract.toString(), balanceOfUserInTokenInsideAmmC.toString())
+        });
+      });
     });

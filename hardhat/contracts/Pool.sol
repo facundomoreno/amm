@@ -2,6 +2,7 @@
 pragma solidity >=0.8.2 <0.9.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "../node_modules/hardhat/console.sol";
 
 error Pool_OnlyOwnerCanCallThisFunction();
 
@@ -58,6 +59,12 @@ contract Pool {
 
 
         // en AMMController el negociador aprueba a la pool a gastar esto de su cuenta
+        
+        console.log("Token: ", _tokenIn);
+        console.log("Amount: ", _amountIn);
+        console.log("Trader: ", _negotiator);
+        console.log("Pool: ", address(this));
+
         tokenIn.transferFrom(_negotiator, address(this), _amountIn);
 
         /*

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.2 <0.9.0;
 
+import "../node_modules/hardhat/console.sol";
 import "./Token.sol";
 import "./Pool.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -174,10 +175,6 @@ contract AMMController {
         address toToken,
         uint256 amountIn
     ) public {
-        if (getUserBalanceInToken(msg.sender, fromToken) < amountIn) {
-            revert AMMController_InsufficientFunds();
-        }
-
         if (
             !((fromToken == stableCurrency &&
                 tokenToPool[toToken] != address(0)) ||
@@ -186,6 +183,17 @@ contract AMMController {
         ) {
             revert AMMController_InvalidTokenPair();
         }
+
+        if (
+            fromToken == stableCurrency &&
+            getUserBalanceInStableCurrency(msg.sender) < amountIn
+        ) {
+            revert AMMController_InsufficientFunds();
+        } 
+        if (fromToken != stableCurrency && getUserBalanceInToken(msg.sender, fromToken) < amountIn) {
+                revert AMMController_InsufficientFunds();
+        }
+        
 
         address poolAddress;
 
@@ -198,6 +206,10 @@ contract AMMController {
         userApproveTransfer(fromToken, amountIn, poolAddress);
 
         Pool poolContract = Pool(poolAddress);
+
+        console.log("------------");
+        console.log(fromToken, amountIn, poolAddress, msg.sender);
+
         uint256 amountOutReceived = poolContract.swap(
             fromToken,
             amountIn,
@@ -222,6 +234,7 @@ contract AMMController {
         address _spender
     ) public {
         ERC20 token = ERC20(_token);
+        console.log(_token, _amount, _spender, msg.sender);
         token.approve(_spender, _amount);
     }
 
