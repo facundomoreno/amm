@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity >=0.8.2 <0.9.0;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "../node_modules/hardhat/console.sol";
@@ -38,7 +38,7 @@ contract Pool {
         uint256 _amountIn,
         address _negotiator
     ) external returns (uint amountOut) {
-        if(msg.sender != owner) {
+        if (msg.sender != owner) {
             revert Pool_OnlyOwnerCanCallThisFunction();
         }
         require(
@@ -57,16 +57,6 @@ contract Pool {
                 ? (stableCurrency, token, stableCurrencyReserve, tokenReserve)
                 : (token, stableCurrency, tokenReserve, stableCurrencyReserve);
 
-
-        // en AMMController el negociador aprueba a la pool a gastar esto de su cuenta
-        
-        console.log("Token: ", _tokenIn);
-        console.log("Amount: ", _amountIn);
-        console.log("Trader: ", _negotiator);
-        console.log("Pool: ", address(this));
-
-        tokenIn.transferFrom(_negotiator, address(this), _amountIn);
-
         /*
         How much dy for dx?
 
@@ -80,11 +70,8 @@ contract Pool {
         */
         // 0.3% fee
 
-        amountOut =
-            (reserveOut * _amountIn) /
-            (reserveIn + _amountIn);
+        amountOut = (reserveOut * _amountIn) / (reserveIn + _amountIn);
 
-    
         tokenOut.transfer(_negotiator, amountOut);
 
         _update(
@@ -95,12 +82,11 @@ contract Pool {
         return amountOut;
     }
 
-    function getStableCurrencyReserve() public view returns(uint256) {
+    function getStableCurrencyReserve() public view returns (uint256) {
         return stableCurrencyReserve;
     }
 
-     function getTokenReserve() public view returns(uint256) {
+    function getTokenReserve() public view returns (uint256) {
         return tokenReserve;
     }
 }
-

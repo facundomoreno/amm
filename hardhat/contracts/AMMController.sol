@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity >=0.8.2 <0.9.0;
+pragma solidity ^0.8.20;
 
-import "../node_modules/hardhat/console.sol";
 import "./Token.sol";
 import "./Pool.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "../node_modules/hardhat/console.sol";
 
 error AMMController_UserAlreadyRegistered();
 error AMMController_UsernameInUse();
@@ -12,7 +12,8 @@ error AMMController_OnlyOwnerCanCallThisFunction();
 error AMMController_InvalidTokenPair();
 error AMMController_StableCurrencyIsRequired();
 error AMMController_InsufficientFunds();
-error AMMController__LimitOfUsersExceded();
+error AMMController_LimitOfUsersExceded();
+error AMMController_ErrorTest();
 
 contract AMMController {
     struct User {
@@ -64,7 +65,6 @@ contract AMMController {
         uint256 _limitNumberOfUsers, // p = 11
         uint256 _initialTokensForUsers // 3,
     ) {
-        //AMM controller es dueño de todo el stableToken
         owner = msg.sender;
 
         initialConversionRateFromTokenToStable = _initialConversionRateFromTokenToStable;
@@ -102,7 +102,7 @@ contract AMMController {
             revert AMMController_UsernameInUse();
         }
         if (limitNumberOfUsers <= usersCount) {
-            revert AMMController__LimitOfUsersExceded();
+            revert AMMController_LimitOfUsersExceded();
         }
         userToCreate.id = usersCount;
         userToCreate.username = _username;
@@ -189,11 +189,13 @@ contract AMMController {
             getUserBalanceInStableCurrency(msg.sender) < amountIn
         ) {
             revert AMMController_InsufficientFunds();
-        } 
-        if (fromToken != stableCurrency && getUserBalanceInToken(msg.sender, fromToken) < amountIn) {
-                revert AMMController_InsufficientFunds();
         }
-        
+        if (
+            fromToken != stableCurrency &&
+            getUserBalanceInToken(msg.sender, fromToken) < amountIn
+        ) {
+            revert AMMController_InsufficientFunds();
+        }
 
         address poolAddress;
 
@@ -203,12 +205,13 @@ contract AMMController {
             poolAddress = tokenToPool[fromToken];
         }
 
-        userApproveTransfer(fromToken, amountIn, poolAddress);
+        ERC20 fromTokenERC20 = ERC20(fromToken);
+
+        // previously, the user approves this address to spend the amount, outside the contract.
+
+        fromTokenERC20.transferFrom(msg.sender, poolAddress, amountIn);
 
         Pool poolContract = Pool(poolAddress);
-
-        console.log("------------");
-        console.log(fromToken, amountIn, poolAddress, msg.sender);
 
         uint256 amountOutReceived = poolContract.swap(
             fromToken,
@@ -216,8 +219,13 @@ contract AMMController {
             msg.sender
         );
 
-        userTokenBalance[msg.sender][fromToken] -= amountIn;
-        userTokenBalance[msg.sender][toToken] += amountOutReceived;
+        if (fromToken == stableCurrency) {
+            userStableCurrencyBalance[msg.sender] -= amountIn;
+            userTokenBalance[msg.sender][toToken] += amountOutReceived;
+        } else {
+            userTokenBalance[msg.sender][fromToken] -= amountIn;
+            userStableCurrencyBalance[msg.sender] += amountOutReceived;
+        }
 
         emit TradeExecuted(
             msg.sender,
@@ -226,16 +234,6 @@ contract AMMController {
             amountIn,
             amountOutReceived
         );
-    }
-
-    function userApproveTransfer(
-        address _token,
-        uint256 _amount,
-        address _spender
-    ) public {
-        ERC20 token = ERC20(_token);
-        console.log(_token, _amount, _spender, msg.sender);
-        token.approve(_spender, _amount);
     }
 
     function getUserBalanceInToken(
