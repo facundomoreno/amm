@@ -7,7 +7,7 @@ import "../node_modules/hardhat/console.sol";
 error Pool_OnlyOwnerCanCallThisFunction();
 error Pool_ReceivedDifferentValueThanNecessaryForSwap();
 error Pool_InvalidToken();
-error Pool_NotEnoughTokensInPoolToReturnThatAmount();
+error Pool_NotEnoughTokenOutInPoolToReturnThatAmount();
 
 contract Pool {
     ERC20 public immutable stableCurrency;
@@ -62,7 +62,7 @@ contract Pool {
             revert Pool_InvalidToken();
         }
         if (amountOut < 1) {
-            revert Pool_NotEnoughTokensInPoolToReturnThatAmount();
+            revert Pool_NotEnoughTokenOutInPoolToReturnThatAmount();
         }
 
         if (tokenIn.balanceOf(address(this)) != (reserveIn + _amountIn)) {
