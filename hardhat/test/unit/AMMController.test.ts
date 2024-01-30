@@ -209,9 +209,8 @@ const {
             await ammControllerContract.connect(newUser).createUser(`User${i}`);
           }
         });
-        it("execute swap function correctly", async () => {
-          const signers = await ethers.getSigners();
-          const trader = signers[1];
+        it("trade stable for tokens working correctly", async () => {
+          const [, trader] = await ethers.getSigners();
           const amountIn =
             ammCArgs.initialConversionFromTokenToStable *
             ammCArgs.initialBuyOptionsOfTokensForUsers;
@@ -274,6 +273,240 @@ const {
             balanceOfUserInTokenERC20Contract.toString(),
             balanceOfUserInTokenInsideAmmC.toString()
           );
+        });
+        it("fails if other than contract calls the swap function of pool", async () => {
+          const [, user] = await ethers.getSigners();
+          const tokens = await ammControllerContract.getAllTokens();
+
+          const poolAddress = await ammControllerContract.getPoolForToken(
+            tokens[0][0]
+          );
+
+          const poolContract = await ethers.getContractAt("Pool", poolAddress);
+
+          await expect(
+            poolContract.swap(tokens[0][0], 100, user.address)
+          ).to.be.revertedWithCustomError(
+            poolContract,
+            "Pool_OnlyOwnerCanCallThisFunction"
+          );
+        });
+        it("fails if user sent different amount than necessary for swap", async () => {
+          const [, trader] = await ethers.getSigners();
+          const tokens = await ammControllerContract.getAllTokens();
+
+          const stableCurrencyContract = await ethers.getContractAt(
+            "Token",
+            stableCurrencyAddress
+          );
+
+          const amountIn =
+            ammCArgs.initialConversionFromTokenToStable *
+            ammCArgs.initialBuyOptionsOfTokensForUsers;
+
+          await stableCurrencyContract
+            .connect(trader)
+            .approve(ammControllerContract.target, amountIn);
+
+          await expect(
+            ammControllerContract
+              .connect(trader)
+              .tradeTokens(stableCurrencyAddress, tokens[0][0], amountIn + 1)
+          ).to.be.revertedWithCustomError(
+            ammControllerContract,
+            "AMMController_AllowanceDifferOrAmountZero"
+          );
+
+          await expect(
+            ammControllerContract
+              .connect(trader)
+              .tradeTokens(stableCurrencyAddress, tokens[0][0], amountIn - 1)
+          ).to.be.revertedWithCustomError(
+            ammControllerContract,
+            "AMMController_AllowanceDifferOrAmountZero"
+          );
+
+          await expect(
+            ammControllerContract
+              .connect(trader)
+              .tradeTokens(stableCurrencyAddress, tokens[0][0], 0)
+          ).to.be.revertedWithCustomError(
+            ammControllerContract,
+            "AMMController_AllowanceDifferOrAmountZero"
+          );
+
+          await expect(
+            ammControllerContract
+              .connect(trader)
+              .tradeTokens(stableCurrencyAddress, tokens[0][0], amountIn)
+          ).to.emit(ammControllerContract, "TradeExecuted");
+        });
+        it("fails if pool can't return enough tokenOut", async () => {
+          const signers = await ethers.getSigners();
+
+          const tokenToReceiveAddress = (
+            await ammControllerContract.getAllTokens()
+          )[0][0];
+
+          const stableCurrencyContract = await ethers.getContractAt(
+            "Token",
+            stableCurrencyAddress
+          );
+
+          const amountIn =
+            ammCArgs.initialConversionFromTokenToStable *
+            ammCArgs.initialBuyOptionsOfTokensForUsers;
+
+          for (var i = 0; i < ammCArgs.limitNumberOfUsers; i++) {
+            const trader = signers[i + 1];
+
+            // tokenIn
+            const poolStableReserve =
+              await ammControllerContract.getPoolStableCurrencyReserve(
+                tokenToReceiveAddress
+              );
+
+            // tokenOut
+
+            const poolTokenReserve =
+              await ammControllerContract.getPoolTokenReserve(
+                tokenToReceiveAddress
+              );
+
+            const expectedAmountOut =
+              (Number(poolTokenReserve) * amountIn) /
+              (Number(poolStableReserve) + amountIn);
+
+            if (expectedAmountOut >= 1) {
+              await stableCurrencyContract
+                .connect(trader)
+                .approve(ammControllerContract.target, amountIn);
+
+              await ammControllerContract
+                .connect(trader)
+                .tradeTokens(
+                  stableCurrencyAddress,
+                  tokenToReceiveAddress,
+                  amountIn
+                );
+            } else {
+              const poolAddress = await ammControllerContract.getPoolForToken(
+                tokenToReceiveAddress
+              );
+
+              const poolContract = await ethers.getContractAt(
+                "Pool",
+                poolAddress
+              );
+
+              await stableCurrencyContract
+                .connect(trader)
+                .approve(ammControllerContract.target, amountIn);
+
+              await expect(
+                ammControllerContract
+                  .connect(trader)
+                  .tradeTokens(
+                    stableCurrencyAddress,
+                    tokenToReceiveAddress,
+                    amountIn
+                  )
+              ).to.be.revertedWithCustomError(
+                poolContract,
+                "Pool_NotEnoughTokensInPoolToReturnThatAmount"
+              );
+            }
+          }
+        });
+        it("fails if an external account try to trade", async () => {
+          const signers = await ethers.getSigners();
+
+          const amountIn =
+            ammCArgs.initialConversionFromTokenToStable *
+            ammCArgs.initialBuyOptionsOfTokensForUsers;
+
+          const tokenToReceiveAddress = (
+            await ammControllerContract.getAllTokens()
+          )[0][0];
+
+          const stableCurrencyContract = await ethers.getContractAt(
+            "Token",
+            stableCurrencyAddress
+          );
+
+          await stableCurrencyContract.approve(
+            ammControllerContract.target,
+            amountIn
+          );
+
+          // signers[0] is not a registered user
+          await expect(
+            ammControllerContract
+              .connect(signers[0])
+              .tradeTokens(
+                stableCurrencyAddress,
+                tokenToReceiveAddress,
+                amountIn
+              )
+          ).to.be.revertedWithCustomError(
+            ammControllerContract,
+            "AMMController_NotUser"
+          );
+        });
+        it("price of token increase after user get some", async () => {
+          const [, trader] = await ethers.getSigners();
+
+          const tokenAddress = (
+            await ammControllerContract.getAllTokens()
+          )[0][0];
+
+          const poolStableReserve =
+            await ammControllerContract.getPoolStableCurrencyReserve(
+              tokenAddress
+            );
+
+          const poolTokenReserve =
+            await ammControllerContract.getPoolTokenReserve(tokenAddress);
+
+          const priceOfTokenBefore =
+            Number(poolStableReserve) / Number(poolTokenReserve);
+
+          assert.equal(
+            priceOfTokenBefore,
+            ammCArgs.initialConversionFromTokenToStable
+          );
+
+          const stableCurrencyContract = await ethers.getContractAt(
+            "Token",
+            stableCurrencyAddress
+          );
+
+          const amountIn =
+            ammCArgs.initialConversionFromTokenToStable *
+            ammCArgs.initialBuyOptionsOfTokensForUsers;
+
+          await stableCurrencyContract
+            .connect(trader)
+            .approve(ammControllerContract.target, amountIn);
+
+          await ammControllerContract
+            .connect(trader)
+            .tradeTokens(stableCurrencyAddress, tokenAddress, amountIn);
+
+          const poolStableReserveAfter =
+            await ammControllerContract.getPoolStableCurrencyReserve(
+              tokenAddress
+            );
+
+          const poolTokenReserveAfter =
+            await ammControllerContract.getPoolTokenReserve(tokenAddress);
+
+          const priceOfTokenAfter =
+            Number(poolStableReserveAfter) / Number(poolTokenReserveAfter);
+
+          assert.isAbove(priceOfTokenAfter, priceOfTokenBefore);
+
+          // Ver el tema de las cuentas porque los usuario pueden comprar muy pocos tokens en comparación a lo que hay
         });
       });
     });

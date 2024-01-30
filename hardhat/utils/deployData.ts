@@ -1,10 +1,10 @@
 const ammControllerConstructorArguments: {
-  tokens: { name: string; tag: string }[],
-  stableCurrency: { name: string; tag: string },
-  initialSupplyForTokens: number,
-  initialConversionFromTokenToStable: number,
-  limitNumberOfUsers: number,
-  initialBuyOptionsOfTokensForUsers: number
+  tokens: { name: string; tag: string }[];
+  stableCurrency: { name: string; tag: string };
+  initialSupplyForTokens: number;
+  initialConversionFromTokenToStable: number;
+  limitNumberOfUsers: number;
+  initialBuyOptionsOfTokensForUsers: number;
 } = {
   tokens: [
     { name: "Facu", tag: "FAC" },
@@ -18,12 +18,12 @@ const ammControllerConstructorArguments: {
     { name: "Ian", tag: "IAN" },
     { name: "Mastro", tag: "MST" },
     { name: "Palmo", tag: "PLM" },
-  ], 
-  stableCurrency: { name: "Mutante Coin", tag: "MUT" }, 
-  initialSupplyForTokens: 20, 
-  initialConversionFromTokenToStable: 1000, 
-  limitNumberOfUsers: 11, 
-  initialBuyOptionsOfTokensForUsers: 3, 
+  ],
+  stableCurrency: { name: "Mutante Coin", tag: "MUT" },
+  initialSupplyForTokens: 2000,
+  initialConversionFromTokenToStable: 1000,
+  limitNumberOfUsers: 11,
+  initialBuyOptionsOfTokensForUsers: 100,
 };
 
 export { ammControllerConstructorArguments };

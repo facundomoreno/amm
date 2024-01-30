@@ -12,8 +12,10 @@ error AMMController_OnlyOwnerCanCallThisFunction();
 error AMMController_InvalidTokenPair();
 error AMMController_StableCurrencyIsRequired();
 error AMMController_InsufficientFunds();
+error AMMController_AllowanceDifferOrAmountZero();
 error AMMController_LimitOfUsersExceded();
 error AMMController_ErrorTest();
+error AMMController_NotUser();
 
 contract AMMController {
     struct User {
@@ -32,7 +34,6 @@ contract AMMController {
         string tag;
     }
 
-    event TokenAdded(address newToken, address marketStableCurrency);
     event TradeExecuted(
         address negotiator,
         address fromToken,
@@ -121,18 +122,18 @@ contract AMMController {
     }
 
     function createToken(
-        uint256 initialSupply,
-        string memory name,
-        string memory tag
+        uint256 _initialSupply,
+        string memory _name,
+        string memory _tag
     ) private returns (address) {
         if (stableCurrency == address(0)) {
             revert AMMController_StableCurrencyIsRequired();
         }
 
-        address newToken = address(new Token(initialSupply, name, tag));
+        address newToken = address(new Token(_initialSupply, _name, _tag));
 
-        uint256 tokenReserve = initialSupply;
-        uint256 stableCurrencyReserve = initialSupply *
+        uint256 tokenReserve = _initialSupply;
+        uint256 stableCurrencyReserve = _initialSupply *
             initialConversionRateFromTokenToStable;
 
         address newPool = address(
@@ -155,98 +156,80 @@ contract AMMController {
 
         tokensCount++;
 
-        emit TokenAdded(newToken, newPool);
-
         return newToken;
     }
 
     function createStableCurrency(
-        uint256 initialSupply,
-        string memory name,
-        string memory tag
+        uint256 _initialSupply,
+        string memory _name,
+        string memory _tag
     ) private returns (address) {
-        address newToken = address(new Token(initialSupply, name, tag));
+        address newToken = address(new Token(_initialSupply, _name, _tag));
 
         return newToken;
     }
 
     function tradeTokens(
-        address fromToken,
-        address toToken,
-        uint256 amountIn
+        address _fromToken,
+        address _toToken,
+        uint256 _amountIn
     ) public {
+        ERC20 fromTokenERC20 = ERC20(_fromToken);
+
+        if (!users[msg.sender].isRegistered) {
+            revert AMMController_NotUser();
+        }
         if (
-            !((fromToken == stableCurrency &&
-                tokenToPool[toToken] != address(0)) ||
-                (toToken == stableCurrency &&
-                    tokenToPool[fromToken] != address(0)))
+            (fromTokenERC20.allowance(msg.sender, address(this)) !=
+                _amountIn) || _amountIn < 1
+        ) {
+            revert AMMController_AllowanceDifferOrAmountZero();
+        }
+
+        if (
+            !((_fromToken == stableCurrency &&
+                tokenToPool[_toToken] != address(0)) ||
+                (_toToken == stableCurrency &&
+                    tokenToPool[_fromToken] != address(0)))
         ) {
             revert AMMController_InvalidTokenPair();
         }
 
-        if (
-            fromToken == stableCurrency &&
-            getUserBalanceInStableCurrency(msg.sender) < amountIn
-        ) {
-            revert AMMController_InsufficientFunds();
-        }
-        if (
-            fromToken != stableCurrency &&
-            getUserBalanceInToken(msg.sender, fromToken) < amountIn
-        ) {
-            revert AMMController_InsufficientFunds();
-        }
-
         address poolAddress;
 
-        if (tokenToPool[fromToken] == address(0)) {
-            poolAddress = tokenToPool[toToken];
+        if (tokenToPool[_fromToken] == address(0)) {
+            poolAddress = tokenToPool[_toToken];
         } else {
-            poolAddress = tokenToPool[fromToken];
+            poolAddress = tokenToPool[_fromToken];
         }
-
-        ERC20 fromTokenERC20 = ERC20(fromToken);
 
         // previously, the user approves this address to spend the amount, outside the contract.
 
-        fromTokenERC20.transferFrom(msg.sender, poolAddress, amountIn);
+        fromTokenERC20.transferFrom(msg.sender, poolAddress, _amountIn);
 
         Pool poolContract = Pool(poolAddress);
 
         uint256 amountOutReceived = poolContract.swap(
-            fromToken,
-            amountIn,
+            _fromToken,
+            _amountIn,
             msg.sender
         );
 
-        if (fromToken == stableCurrency) {
-            userStableCurrencyBalance[msg.sender] -= amountIn;
-            userTokenBalance[msg.sender][toToken] += amountOutReceived;
+        if (_fromToken == stableCurrency) {
+            userStableCurrencyBalance[msg.sender] -= _amountIn;
+            userTokenBalance[msg.sender][_toToken] += amountOutReceived;
         } else {
-            userTokenBalance[msg.sender][fromToken] -= amountIn;
+            userTokenBalance[msg.sender][_fromToken] -= _amountIn;
             userStableCurrencyBalance[msg.sender] += amountOutReceived;
         }
 
         emit TradeExecuted(
             msg.sender,
-            fromToken,
-            toToken,
-            amountIn,
+            _fromToken,
+            _toToken,
+            _amountIn,
             amountOutReceived
         );
-    }
-
-    function getUserBalanceInToken(
-        address _userAddress,
-        address _token
-    ) public view returns (uint256) {
-        return userTokenBalance[_userAddress][_token];
-    }
-
-    function getUserBalanceInStableCurrency(
-        address _userAddress
-    ) public view returns (uint256) {
-        return userStableCurrencyBalance[_userAddress];
     }
 
     function getAllTokens() public view returns (GetAllTokensReturns[] memory) {
@@ -268,5 +251,34 @@ contract AMMController {
 
     function getStableCurrency() public view returns (address) {
         return stableCurrency;
+    }
+
+    function getUserBalanceInToken(
+        address _userAddress,
+        address _token
+    ) public view returns (uint256) {
+        return userTokenBalance[_userAddress][_token];
+    }
+
+    function getUserBalanceInStableCurrency(
+        address _userAddress
+    ) public view returns (uint256) {
+        return userStableCurrencyBalance[_userAddress];
+    }
+
+    function getPoolStableCurrencyReserve(
+        address _tokenOfPool
+    ) public view returns (uint256) {
+        Pool poolContract = Pool(tokenToPool[_tokenOfPool]);
+
+        return poolContract.getStableCurrencyReserve();
+    }
+
+    function getPoolTokenReserve(
+        address _tokenOfPool
+    ) public view returns (uint256) {
+        Pool poolContract = Pool(tokenToPool[_tokenOfPool]);
+
+        return poolContract.getTokenReserve();
     }
 }

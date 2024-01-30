@@ -5,6 +5,9 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "../node_modules/hardhat/console.sol";
 
 error Pool_OnlyOwnerCanCallThisFunction();
+error Pool_ReceivedDifferentValueThanNecessaryForSwap();
+error Pool_InvalidToken();
+error Pool_NotEnoughTokensInPoolToReturnThatAmount();
 
 contract Pool {
     ERC20 public immutable stableCurrency;
@@ -14,7 +17,6 @@ contract Pool {
 
     uint256 public stableCurrencyReserve;
     uint256 public tokenReserve;
-    uint256 public totalSupply;
 
     constructor(
         address _stableCurrency,
@@ -38,16 +40,8 @@ contract Pool {
         uint256 _amountIn,
         address _negotiator
     ) external returns (uint amountOut) {
-        if (msg.sender != owner) {
-            revert Pool_OnlyOwnerCanCallThisFunction();
-        }
-        require(
-            _tokenIn == address(stableCurrency) || _tokenIn == address(token),
-            "invalid token"
-        );
-        require(_amountIn > 0, "amount in = 0");
-
         bool isstableCurrency = _tokenIn == address(stableCurrency);
+
         (
             ERC20 tokenIn,
             ERC20 tokenOut,
@@ -56,6 +50,24 @@ contract Pool {
         ) = isstableCurrency
                 ? (stableCurrency, token, stableCurrencyReserve, tokenReserve)
                 : (token, stableCurrency, tokenReserve, stableCurrencyReserve);
+
+        amountOut = (reserveOut * _amountIn) / (reserveIn + _amountIn);
+
+        if (msg.sender != owner) {
+            revert Pool_OnlyOwnerCanCallThisFunction();
+        }
+        if (
+            !(_tokenIn == address(stableCurrency) || _tokenIn == address(token))
+        ) {
+            revert Pool_InvalidToken();
+        }
+        if (amountOut < 1) {
+            revert Pool_NotEnoughTokensInPoolToReturnThatAmount();
+        }
+
+        if (tokenIn.balanceOf(address(this)) != (reserveIn + _amountIn)) {
+            revert Pool_ReceivedDifferentValueThanNecessaryForSwap();
+        }
 
         /*
         How much dy for dx?
@@ -69,8 +81,6 @@ contract Pool {
         ydx / (x + dx) = dy
         */
         // 0.3% fee
-
-        amountOut = (reserveOut * _amountIn) / (reserveIn + _amountIn);
 
         tokenOut.transfer(_negotiator, amountOut);
 
