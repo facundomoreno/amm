@@ -23,7 +23,7 @@ const mockDataForTokensOwnedList = [
   },
 ];
 
-export default function Home() {
+export default function HomePage() {
   return (
     <main className="p-12">
       <div className="flex">
