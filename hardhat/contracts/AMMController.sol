@@ -232,6 +232,12 @@ contract AMMController {
         );
     }
 
+    function checkIfUserExists(
+        address possibleUser
+    ) public view returns (bool) {
+        return users[possibleUser].isRegistered;
+    }
+
     function getAllTokens() public view returns (GetAllTokensReturns[] memory) {
         GetAllTokensReturns[] memory tokensDataList = new GetAllTokensReturns[](
             tokensCount

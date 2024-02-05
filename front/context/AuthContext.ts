@@ -1,12 +1,22 @@
-import { JsonRpcSigner } from "ethers"
-import { createContext } from "react"
+import { Wallet } from "ethers";
+import { createContext } from "react";
 
-export interface AccountType {
-    address?: string
-    signer: JsonRpcSigner
-    balance?: string
-    chainId?: string
-    network?: string
+export interface AuthContextType {
+  currentUser: AccountType | null;
+  changeCurrentUser: (data: AccountType) => void;
 }
 
-export const AuthContext = createContext<AccountType | null>(null)
+export interface AccountType {
+  address?: string;
+  privateKey?: string;
+  username?: string;
+  signer?: Wallet;
+  balance?: string;
+  chainId?: string;
+  network?: string;
+}
+
+export const AuthContext = createContext<AuthContextType>({
+  currentUser: null,
+  changeCurrentUser: () => {},
+});

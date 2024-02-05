@@ -1,6 +1,10 @@
+"use client";
 import HistoricValuesChart from "@/components/HistoricValuesChart";
 import TokensDistributionChart from "@/components/TokensDistributionChart";
 import TokensDistributionList from "@/components/TokensDistributionList";
+import { AccountType, AuthContext } from "@/context/AuthContext";
+import { useContext, useEffect, useLayoutEffect } from "react";
+import { useRouter } from "next/navigation";
 
 const mockDataForTokensOwnedList = [
   {
@@ -24,17 +28,31 @@ const mockDataForTokensOwnedList = [
 ];
 
 export default function HomePage() {
+  const router = useRouter();
+  const authData = useContext(AuthContext);
+
+  useEffect(() => {
+    if (authData.currentUser == null) {
+      router.push("/auth");
+    }
+  }, []);
   return (
-    <main className="p-12">
-      <div className="flex">
-        <div className="flex-1">
-          <HistoricValuesChart />
-        </div>
-        <div className="flex-1 flex flex-col">
-          <TokensDistributionChart />
-          <TokensDistributionList data={mockDataForTokensOwnedList} />
-        </div>
-      </div>
-    </main>
+    <>
+      {authData.currentUser != null ? (
+        <main className="p-12">
+          <div className="flex">
+            <div className="flex-1">
+              <HistoricValuesChart />
+            </div>
+            <div className="flex-1 flex flex-col">
+              <TokensDistributionChart />
+              <TokensDistributionList data={mockDataForTokensOwnedList} />
+            </div>
+          </div>
+        </main>
+      ) : (
+        <></>
+      )}
+    </>
   );
 }

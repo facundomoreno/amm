@@ -5,6 +5,7 @@ import Image from "next/image";
 import LogIn from "@/components/LogIn";
 import { useState } from "react";
 import Registration from "@/components/Registration";
+import { AccountType, AuthContext } from "@/context/AuthContext";
 
 enum AUTH_COMPONENTS {
   LOG_IN,
@@ -16,24 +17,28 @@ export default function Auth() {
     AUTH_COMPONENTS.LOG_IN
   );
   return (
-    <>
-      <div className="min-h-screen p-16">
-        <h1 className="text-4xl font-sans">
-          Bienvenido a mutantes tokens market!
-        </h1>
-        <div className="flex items-center justify-center mt-56">
-          {userLocation == AUTH_COMPONENTS.LOG_IN ? (
-            <LogIn
-              onAccessClicked={(privateKey) => console.log(privateKey)}
-              onRegisterClicked={() =>
-                setUserLocation(AUTH_COMPONENTS.REGISTRATION)
-              }
-            />
-          ) : (
-            <Registration />
-          )}
+    <AuthContext.Consumer>
+      {({ currentUser, changeCurrentUser }) => (
+        <div className="min-h-screen p-16">
+          <h1 className="text-4xl font-sans">
+            Bienvenido a mutantes tokens market!
+          </h1>
+          <div className="flex items-center justify-center mt-56">
+            {userLocation == AUTH_COMPONENTS.LOG_IN ? (
+              <LogIn
+                onUserLogged={(data: AccountType) => changeCurrentUser(data)}
+                onRegisterClicked={() =>
+                  setUserLocation(AUTH_COMPONENTS.REGISTRATION)
+                }
+              />
+            ) : (
+              <Registration
+                onUserCreated={(data: AccountType) => changeCurrentUser(data)}
+              />
+            )}
+          </div>
         </div>
-      </div>
-    </>
+      )}
+    </AuthContext.Consumer>
   );
 }

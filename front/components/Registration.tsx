@@ -1,21 +1,25 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import CopyIcon from "@/public/CopyIcon";
 import { ethers } from "ethers";
 import Skeleton from "react-loading-skeleton";
+import { AccountType, AuthContext } from "@/context/AuthContext";
 import "react-loading-skeleton/dist/skeleton.css";
 
-interface RegistrationProps {}
+interface RegistrationProps {
+  onUserCreated: (data: AccountType) => void;
+}
 
 interface Wallet {
   address: string;
   privateKey: string;
 }
 
-const Registration = ({}: RegistrationProps) => {
+const Registration = ({ onUserCreated }: RegistrationProps) => {
   const [username, setUsername] = useState<string>("");
   const [wallet, setWallet] = useState<Wallet | undefined>(undefined);
   const [copiedKey, setCopiedKey] = useState<boolean>(false);
+  const authData = useContext(AuthContext);
 
   const handleCopyPrivateKey = () => {
     navigator.clipboard.writeText(wallet?.privateKey!);
@@ -29,10 +33,19 @@ const Registration = ({}: RegistrationProps) => {
     const provider = new ethers.JsonRpcProvider(url);
 
     try {
-      const balance = await provider.getBalance(wallet?.address!);
+      const balance = (await provider.getBalance(wallet?.address!)).toString();
       const network = await provider.getNetwork();
       const signer = new ethers.Wallet(wallet?.privateKey!, provider);
-      console.log(balance, network, signer);
+
+      onUserCreated({
+        address: wallet?.address,
+        balance,
+        network: network.name,
+        signer,
+        chainId: network.chainId.toString(),
+        privateKey: wallet?.privateKey, // guardarla encriptada
+        username,
+      });
     } catch (error: Error | any) {
       alert(`Error connecting to wallet: ${error?.message ?? error}`);
     }
@@ -58,7 +71,7 @@ const Registration = ({}: RegistrationProps) => {
     if (copiedKey) {
       setTimeout(function () {
         setCopiedKey(false);
-      }, 1000);
+      }, 300);
     }
   }, [copiedKey]);
 

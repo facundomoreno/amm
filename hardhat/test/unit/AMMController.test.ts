@@ -119,7 +119,18 @@ const {
           const signers = await ethers.getSigners();
           const user = signers[1];
 
+          const userExistsBefore =
+            await ammControllerContract.checkIfUserExists(user.address);
+
+          assert.equal(userExistsBefore, false);
+
           await ammControllerContract.connect(user).createUser("Facu");
+
+          const userExistsAfter = await ammControllerContract.checkIfUserExists(
+            user.address
+          );
+
+          assert.equal(userExistsAfter, true);
 
           const newUserTokenBalance =
             await ammControllerContract.getUserBalanceInStableCurrency(
