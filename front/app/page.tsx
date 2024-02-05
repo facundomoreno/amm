@@ -2,9 +2,10 @@
 import HistoricValuesChart from "@/components/HistoricValuesChart";
 import TokensDistributionChart from "@/components/TokensDistributionChart";
 import TokensDistributionList from "@/components/TokensDistributionList";
-import { AccountType, AuthContext } from "@/context/AuthContext";
-import { useContext, useEffect, useLayoutEffect } from "react";
-import { useRouter } from "next/navigation";
+import { AuthContext } from "@/context/AuthContext";
+import useAmmControllerContract from "@/hooks/useAmmControllerContract";
+import useCheckIfAddressIsRegistered from "@/hooks/useCheckIfAddressIsRegistered";
+import { useContext, useEffect } from "react";
 
 const mockDataForTokensOwnedList = [
   {
@@ -28,14 +29,9 @@ const mockDataForTokensOwnedList = [
 ];
 
 export default function HomePage() {
-  const router = useRouter();
   const authData = useContext(AuthContext);
+  const contract = useAmmControllerContract();
 
-  useEffect(() => {
-    if (authData.currentUser == null) {
-      router.push("/auth");
-    }
-  }, []);
   return (
     <>
       {authData.currentUser != null ? (

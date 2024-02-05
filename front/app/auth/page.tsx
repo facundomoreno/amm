@@ -1,7 +1,4 @@
 "use client";
-
-import { ThreeDots } from "react-loader-spinner";
-import Image from "next/image";
 import LogIn from "@/components/LogIn";
 import { useState } from "react";
 import Registration from "@/components/Registration";
@@ -17,28 +14,38 @@ export default function Auth() {
     AUTH_COMPONENTS.LOG_IN
   );
   return (
-    <AuthContext.Consumer>
-      {({ currentUser, changeCurrentUser }) => (
-        <div className="min-h-screen p-16">
-          <h1 className="text-4xl font-sans">
-            Bienvenido a mutantes tokens market!
-          </h1>
-          <div className="flex items-center justify-center mt-56">
-            {userLocation == AUTH_COMPONENTS.LOG_IN ? (
-              <LogIn
-                onUserLogged={(data: AccountType) => changeCurrentUser(data)}
-                onRegisterClicked={() =>
-                  setUserLocation(AUTH_COMPONENTS.REGISTRATION)
-                }
-              />
-            ) : (
-              <Registration
-                onUserCreated={(data: AccountType) => changeCurrentUser(data)}
-              />
+    <>
+      <AuthContext.Consumer>
+        {({ currentUser, changeCurrentUser }) => (
+          <>
+            {currentUser == null && (
+              <div className="min-h-screen p-16">
+                <h1 className="text-4xl font-sans">
+                  Bienvenido a mutantes tokens market!
+                </h1>
+                <div className="flex items-center justify-center mt-56">
+                  {userLocation == AUTH_COMPONENTS.LOG_IN ? (
+                    <LogIn
+                      onUserLogged={(data: AccountType) =>
+                        changeCurrentUser(data)
+                      }
+                      onRegisterClicked={() =>
+                        setUserLocation(AUTH_COMPONENTS.REGISTRATION)
+                      }
+                    />
+                  ) : (
+                    <Registration
+                      onUserCreated={(data: AccountType) =>
+                        changeCurrentUser(data)
+                      }
+                    />
+                  )}
+                </div>
+              </div>
             )}
-          </div>
-        </div>
-      )}
-    </AuthContext.Consumer>
+          </>
+        )}
+      </AuthContext.Consumer>
+    </>
   );
 }
