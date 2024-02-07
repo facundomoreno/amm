@@ -1461,6 +1461,11 @@ esutils@^2.0.2:
   resolved "https://registry.yarnpkg.com/esutils/-/esutils-2.0.3.tgz#74d2eb4de0b8da1293711910d50775b9b710ef64"
   integrity sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==
 
+ethers-decode-error@^2.1.2:
+  version "2.1.2"
+  resolved "https://registry.yarnpkg.com/ethers-decode-error/-/ethers-decode-error-2.1.2.tgz#238729faa19377a8ce5ee378818f5dd109809ce5"
+  integrity sha512-t+nyS9qQ3XdPF2rkUR7hHsHZ6XOEZBpeJtL4/yKKXNnr9tRGrb9532yrMMfjhqBIkU6KD6EHGqo/nyYwuIIGTQ==
+
 ethers@^6.10.0:
   version "6.10.0"
   resolved "https://registry.yarnpkg.com/ethers/-/ethers-6.10.0.tgz#20f3c63c60d59a993f8090ad423d8a3854b3b1cd"

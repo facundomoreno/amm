@@ -13,7 +13,6 @@ const LayoutUseClient = ({ children }: { children: ReactNode }) => {
     (data: AccountType) => {
       setCurrentUser(data);
       localStorage.setItem("currentUser", JSON.stringify(data));
-      router.push("/");
     },
     [currentUser]
   );

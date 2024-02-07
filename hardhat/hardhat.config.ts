@@ -13,6 +13,7 @@ const config: HardhatUserConfig = {
   solidity: {
     version: "0.8.20",
     settings: {
+      viaIR: true,
       optimizer: {
         enabled: true,
         runs: 1000,
@@ -32,6 +33,9 @@ const config: HardhatUserConfig = {
     },
     hardhat: {
       chainId: 31337,
+      accounts: {
+        count: 10,
+      },
     },
     localhost: {
       url: "http://127.0.0.1:8545/",

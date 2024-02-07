@@ -1,10 +1,13 @@
 "use client";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { use, useCallback, useContext, useEffect, useState } from "react";
 import CopyIcon from "@/public/CopyIcon";
 import { ethers } from "ethers";
 import Skeleton from "react-loading-skeleton";
 import { AccountType, AuthContext } from "@/context/AuthContext";
+import ammControllerContractAbi from "../abis/AmmController.abi.json";
+import { ErrorDecoder } from "ethers-decode-error";
 import "react-loading-skeleton/dist/skeleton.css";
+import { useRouter } from "next/navigation";
 
 interface RegistrationProps {
   onUserCreated: (data: AccountType) => void;
@@ -15,10 +18,16 @@ interface Wallet {
   privateKey: string;
 }
 
+const errorDecoder = ErrorDecoder.create([ammControllerContractAbi]);
+const GAS_SPONSOR_KEY = process.env.NEXT_PUBLIC_GAS_SPONSOR_KEY;
+const contractAddress = process.env.NEXT_PUBLIC_AMM_CONTROLLER_CONTRACT;
+
 const Registration = ({ onUserCreated }: RegistrationProps) => {
+  const router = useRouter();
   const [username, setUsername] = useState<string>("");
   const [wallet, setWallet] = useState<Wallet | undefined>(undefined);
   const [copiedKey, setCopiedKey] = useState<boolean>(false);
+
   const authData = useContext(AuthContext);
 
   const handleCopyPrivateKey = () => {
@@ -31,25 +40,52 @@ const Registration = ({ onUserCreated }: RegistrationProps) => {
     // let url = "https://rpc.sepolia.org";
 
     const provider = new ethers.JsonRpcProvider(url);
+    const gasSponsorWallet = new ethers.Wallet(GAS_SPONSOR_KEY!, provider);
+    const newUserWallet = new ethers.Wallet(wallet?.privateKey!, provider);
+
+    const ammControllerContract = new ethers.Contract(
+      contractAddress!,
+      ammControllerContractAbi,
+      newUserWallet
+    );
+
+    const userAlreadyRegistered = await ammControllerContract.checkIfUserExists(
+      newUserWallet.address
+    );
 
     try {
-      const balance = (await provider.getBalance(wallet?.address!)).toString();
-      const network = await provider.getNetwork();
-      const signer = new ethers.Wallet(wallet?.privateKey!, provider);
+      if (!userAlreadyRegistered) {
+        await gasSponsorWallet.sendTransaction({
+          from: gasSponsorWallet.address,
+          to: newUserWallet.address,
+          value: ethers.parseEther("2"),
+        });
 
-      onUserCreated({
-        address: wallet?.address,
-        balance,
-        network: network.name,
-        signer,
-        chainId: network.chainId.toString(),
-        privateKey: wallet?.privateKey, // guardarla encriptada
-        username,
-      });
+        await ammControllerContract.createUser(username);
+
+        const balance = (
+          await provider.getBalance(wallet?.address!)
+        ).toString();
+        const network = await provider.getNetwork();
+
+        onUserCreated({
+          address: wallet?.address,
+          balance,
+          network: network.name,
+          signer: newUserWallet,
+          chainId: network.chainId.toString(),
+          privateKey: wallet?.privateKey, // guardarla encriptada
+          username,
+        });
+        router.push("/");
+      } else {
+        throw new Error("User already registered");
+      }
     } catch (error: Error | any) {
-      alert(`Error connecting to wallet: ${error?.message ?? error}`);
+      const decodedError = await errorDecoder.decode(error);
+      console.log(decodedError);
     }
-  }, [wallet]);
+  }, [wallet, username]);
 
   useEffect(() => {
     const getNewWallet = async () => {

@@ -238,6 +238,12 @@ contract AMMController {
         return users[possibleUser].isRegistered;
     }
 
+    function getUserByAddress(
+        address _userAddress
+    ) public view returns (User memory) {
+        return users[_userAddress];
+    }
+
     function getAllTokens() public view returns (GetAllTokensReturns[] memory) {
         GetAllTokensReturns[] memory tokensDataList = new GetAllTokensReturns[](
             tokensCount

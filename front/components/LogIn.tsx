@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { ethers } from "ethers";
 import { AccountType } from "@/context/AuthContext";
-import useCheckIfAddressIsRegistered from "@/hooks/useCheckIfAddressIsRegistered";
+import useCheckIfAddressIsRegistered from "@/hooks/useGetUserByAddress";
 
 interface LogInProps {
   onUserLogged: (data: AccountType) => void;
@@ -11,7 +11,7 @@ interface LogInProps {
 
 const LogIn = ({ onUserLogged, onRegisterClicked }: LogInProps) => {
   const [privateKey, setPrivateKey] = useState<string>("");
-  const { getAddressRegistered, isLoading } = useCheckIfAddressIsRegistered();
+  const { getUser, isLoading } = useCheckIfAddressIsRegistered();
 
   const handleLogIn = useCallback(async () => {
     let url = "http://127.0.0.1:8545/";
@@ -26,23 +26,23 @@ const LogIn = ({ onUserLogged, onRegisterClicked }: LogInProps) => {
 
     const network = await provider.getNetwork();
 
-    const isRegistered = await getAddressRegistered(signerAddress);
+    const user = await getUser(signerAddress);
 
-    console.log(isRegistered);
+    console.log(user);
 
-    if (isRegistered) {
-      onUserLogged({
-        address: signerAddress,
-        balance,
-        chainId: network.chainId.toString(),
-        network: network.name,
-        privateKey,
-        signer: signerWallet,
-        username: "Facu",
-      });
-    } else {
-      alert("No estas registrado");
-    }
+    // if (isRegistered) {
+    //   const username = await onUserLogged({
+    //     address: signerAddress,
+    //     balance,
+    //     chainId: network.chainId.toString(),
+    //     network: network.name,
+    //     privateKey,
+    //     signer: signerWallet,
+    //     username: "Facu",
+    //   });
+    // } else {
+    //   alert("No estas registrado");
+    // }
   }, [privateKey]);
   return (
     <div className="w-full md:w-1/3 lg:w-1/4 min-h-72 flex flex-col justify-center">

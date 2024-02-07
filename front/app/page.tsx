@@ -4,7 +4,7 @@ import TokensDistributionChart from "@/components/TokensDistributionChart";
 import TokensDistributionList from "@/components/TokensDistributionList";
 import { AuthContext } from "@/context/AuthContext";
 import useAmmControllerContract from "@/hooks/useAmmControllerContract";
-import useCheckIfAddressIsRegistered from "@/hooks/useCheckIfAddressIsRegistered";
+import useCheckIfAddressIsRegistered from "@/hooks/useGetUserByAddress";
 import { useContext, useEffect } from "react";
 
 const mockDataForTokensOwnedList = [

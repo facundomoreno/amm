@@ -1,3 +1,4 @@
+/* global BigInt */
 import { ammControllerConstructorArguments } from "../utils/deployData";
 
 const {

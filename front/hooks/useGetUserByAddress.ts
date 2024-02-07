@@ -1,18 +1,18 @@
 import { useCallback, useState } from "react";
 import useAmmControllerContract from "./useAmmControllerContract";
 
-const useCheckIfAddressIsRegistered = () => {
+const useGetUserByAddress = () => {
   const contract = useAmmControllerContract();
   const [isLoading, setIsLoading] = useState(false);
 
-  const getAddressRegistered = useCallback(
+  const getUser = useCallback(
     async (address: string) => {
       if (!contract) return;
 
       setIsLoading(true);
 
       try {
-        const response = await contract.checkIfUserExists(address);
+        const response = await contract.getUserByAddress(address);
 
         return response;
       } catch (e) {
@@ -24,7 +24,7 @@ const useCheckIfAddressIsRegistered = () => {
     [contract]
   );
 
-  return { getAddressRegistered, isLoading };
+  return { getUser, isLoading };
 };
 
-export default useCheckIfAddressIsRegistered;
+export default useGetUserByAddress;

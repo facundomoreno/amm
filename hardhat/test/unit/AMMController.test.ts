@@ -1,8 +1,10 @@
+/* global BigInt */
 import { ammControllerConstructorArguments as ammCArgs } from "../../utils/deployData";
 
 import { assert, expect } from "chai";
 import "@nomicfoundation/hardhat-chai-matchers";
 const { ethers, network, deployments } = require("hardhat");
+// import {ethers} from "hardhat"
 const {
   developmentChains,
   networkConfig,
@@ -15,6 +17,7 @@ const {
       let stableCurrencyAddress: string;
 
       beforeEach(async () => {
+        const signers = await ethers.getSigners();
         const {
           tokens,
           stableCurrency,
@@ -35,7 +38,10 @@ const {
 
         ammControllerContract = await ethers.deployContract(
           "AMMController",
-          args
+          args,
+          {
+            from: signers[0],
+          }
         );
 
         await ammControllerContract.waitForDeployment();
