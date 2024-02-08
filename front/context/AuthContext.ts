@@ -10,10 +10,6 @@ export interface AccountType {
   address?: string;
   privateKey?: string;
   username?: string;
-  signer?: Wallet;
-  balance?: string;
-  chainId?: string;
-  network?: string;
 }
 
 export const AuthContext = createContext<AuthContextType>({

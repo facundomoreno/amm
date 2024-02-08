@@ -1,11 +1,11 @@
-import { Contract, ethers } from "ethers";
+import { Contract, Wallet, ethers } from "ethers";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import ammControllerContractAbi from "../abis/AmmController.abi.json";
 
 const contractAddress = process.env.NEXT_PUBLIC_AMM_CONTROLLER_CONTRACT;
 
-const useAmmControllerContract = () => {
+const useAmmControllerContract = (forcedWallet?: Wallet) => {
   const { currentUser } = useContext(AuthContext);
   const [contract, setContract] = useState<Contract | undefined>(undefined);
 
@@ -26,16 +26,22 @@ const useAmmControllerContract = () => {
     };
 
     const generateContractWithUser = () => {
+      let url = "http://127.0.0.1:8545/";
+
+      const provider = new ethers.JsonRpcProvider(url);
+
+      const signer = new ethers.Wallet(currentUser?.privateKey!, provider);
+
       const newContract = new Contract(
         contractAddress!,
         ammControllerContractAbi,
-        currentUser?.signer
+        signer
       );
       setContract(newContract);
     };
 
     const defineContractToLoad = async () => {
-      if (currentUser?.signer) {
+      if (currentUser?.address) {
         generateContractWithUser();
       } else {
         await generateContractForPublicViews();

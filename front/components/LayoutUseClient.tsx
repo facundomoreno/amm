@@ -3,6 +3,7 @@
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import { AccountType, AuthContext } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
+import Header from "./Header";
 
 const LayoutUseClient = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
@@ -42,9 +43,15 @@ const LayoutUseClient = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider value={contextValue}>
-      <p>{`Current user data: ${currentUser?.address}-${currentUser?.privateKey}`}</p>
-      <button onClick={handleLogOut}>Log out</button>
-      {children}
+      <div className="p-12">
+        <Header
+          username={currentUser?.username}
+          address={currentUser?.address}
+          onLogoutClicked={handleLogOut}
+        />
+
+        {children}
+      </div>
     </AuthContext.Provider>
   );
 };

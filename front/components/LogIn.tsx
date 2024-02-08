@@ -1,8 +1,9 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { ethers } from "ethers";
 import { AccountType } from "@/context/AuthContext";
 import useCheckIfAddressIsRegistered from "@/hooks/useGetUserByAddress";
+import { useRouter } from "next/navigation";
 
 interface LogInProps {
   onUserLogged: (data: AccountType) => void;
@@ -10,39 +11,30 @@ interface LogInProps {
 }
 
 const LogIn = ({ onUserLogged, onRegisterClicked }: LogInProps) => {
+  const router = useRouter();
   const [privateKey, setPrivateKey] = useState<string>("");
   const { getUser, isLoading } = useCheckIfAddressIsRegistered();
 
   const handleLogIn = useCallback(async () => {
-    let url = "http://127.0.0.1:8545/";
+    try {
+      const wallet = new ethers.Wallet(privateKey);
 
-    const provider = new ethers.JsonRpcProvider(url);
+      const user = await getUser(wallet.address);
 
-    const signerWallet = new ethers.Wallet(privateKey, provider);
+      if (user[2]) {
+        onUserLogged({
+          address: wallet?.address,
+          privateKey: wallet?.privateKey,
+          username: user[1],
+        });
 
-    const signerAddress = await signerWallet.getAddress();
-
-    const balance = (await provider.getBalance(signerAddress)).toString();
-
-    const network = await provider.getNetwork();
-
-    const user = await getUser(signerAddress);
-
-    console.log(user);
-
-    // if (isRegistered) {
-    //   const username = await onUserLogged({
-    //     address: signerAddress,
-    //     balance,
-    //     chainId: network.chainId.toString(),
-    //     network: network.name,
-    //     privateKey,
-    //     signer: signerWallet,
-    //     username: "Facu",
-    //   });
-    // } else {
-    //   alert("No estas registrado");
-    // }
+        router.push("/");
+      } else {
+        throw new Error("Usuario no registrado");
+      }
+    } catch (e) {
+      throw e;
+    }
   }, [privateKey]);
   return (
     <div className="w-full md:w-1/3 lg:w-1/4 min-h-72 flex flex-col justify-center">
@@ -61,7 +53,7 @@ const LogIn = ({ onUserLogged, onRegisterClicked }: LogInProps) => {
           className={`flex items-center justify-center w-full px-0 sm:px-16 md:px-28 lg:px-32 py-4 mt-6 text-white font-bold rounded bg-black`}
           onClick={handleLogIn}
         >
-          <p>Acceder</p>
+          {!isLoading ? <p>Acceder</p> : <p>loading</p>}
         </button>
       </div>
       <p

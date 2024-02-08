@@ -11,6 +11,7 @@
   "dependencies": {
     "@emotion/react": "^11.11.3",
     "@emotion/styled": "^11.11.0",
+    "@metamask/jazzicon": "^2.0.0",
     "@mui/material": "^5.15.5",
     "ethers": "^6.10.0",
     "ethers-decode-error": "^2.1.2",
@@ -20,6 +21,7 @@
     "react-google-charts": "^4.0.1",
     "react-loader-spinner": "^6.1.6",
     "react-loading-skeleton": "^3.4.0",
+    "react-metamask-avatar": "^2.0.9",
     "react-toastify": "^10.0.4"
   },
   "devDependencies": {
