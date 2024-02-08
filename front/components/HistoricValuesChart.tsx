@@ -3,28 +3,37 @@
 import React from "react";
 import { Chart } from "react-google-charts";
 
-const data = [
-  ["Month", "Facu", "Polo", "Jotto"],
-  ["Diciembre", 1000, 1000, 1000],
-  ["Enero", 1500, 1400, 900],
-  ["Febrero", 1100, 1100, 100],
-  ["Marzo", 1300, 1600, 200],
-  ["Abril", 1200, 1700, 800],
-  ["Mayo", 1500, 1560, 1600],
-];
+interface HistoricValuesChartProps {
+  data: any;
+  onlyLines?: boolean;
+  height: number;
+  width?: number;
+  options: any;
+}
 
-export const options = {
-  curveType: "function",
-  legend: { position: "bottom" },
-  chartArea: { width: "85%" },
-};
+const HistoricValuesChart = ({
+  data,
+  height,
+  width,
+  options,
+}: HistoricValuesChartProps) => {
+  // const options = {
+  //   curveType: "function",
+  //   legend: { position: "bottom", alignment: "center" },
+  //   chartArea: { width: "100%", height: onlyLines ? "100%" : "40%" },
+  //   vAxis: {
+  //     baselineColor: "transparent",
+  //     gridlines: {
+  //       interval: 0,
+  //     },
+  //   },
+  // };
 
-const HistoricValuesChart = () => {
   return (
     <Chart
       chartType="LineChart"
-      width="100%"
-      height="400px"
+      width={width ? `${width}px` : "100%"}
+      height={`${height}px`}
       data={data}
       options={options}
     />

@@ -43,7 +43,7 @@ const LayoutUseClient = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider value={contextValue}>
-      <div className="p-12">
+      <div className="p-6">
         <Header
           username={currentUser?.username}
           address={currentUser?.address}
