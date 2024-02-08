@@ -25,13 +25,12 @@ const historicValuesChartData = [
 
 const historicValuesChartStyleOptions = {
   curveType: "function",
-  legend: { position: "bottom", alignment: "center" },
-  chartArea: { width: "100%", height: "40%" },
+  // legend: { position: "bottom", alignment: "center" },
+  chartArea: { width: "60%" },
   vAxis: {
     baselineColor: "transparent",
-    gridlines: {
-      interval: 0,
-    },
+    viewWindowMode: "explicit",
+    viewWindow: { min: 0 },
   },
 };
 
@@ -124,12 +123,12 @@ export default function HomePage() {
             <div className="flex flex-col items-center justify-center mt-8 cursor-pointer">
               <SwapTokensButton
                 onClick={handleSwapTokensButtonClicked}
-                size={12}
+                size={8}
               />
               <p className="text-xs mt-4">INTERCAMBIAR TOKENS</p>
             </div>
 
-            <Tabs className="mt-8">
+            <Tabs className="mt-12">
               <TabList>
                 <Tab>Todos los tokens</Tab>
                 <Tab>Tu balance</Tab>
