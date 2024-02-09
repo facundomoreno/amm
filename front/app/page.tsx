@@ -8,94 +8,67 @@ import TokensDistributionChart from "@/components/TokensDistributionChart";
 import TokensDistributionList from "@/components/TokensDistributionList";
 import TotalStableDisplay from "@/components/TotalStableDisplay";
 import { AuthContext } from "@/context/AuthContext";
+import { Token, TokensContext } from "@/context/TokensContext";
 import useAmmControllerContract from "@/hooks/useAmmControllerContract";
+import useGetAllTokens from "@/hooks/useGetAllTokens";
+import defineTokenColor from "@/utils/defineTokenColor";
 import { useContext, useEffect, useState } from "react";
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
 
-const historicValuesChartData = [
-  ["Month", "Facu", "Polo", "Jotto"],
-  ["Diciembre", 1000, 1000, 1000],
-  ["Enero", 1500, 1400, 900],
-  ["Febrero", 1100, 1100, 100],
-  ["Marzo", 1300, 1600, 200],
-  ["Abril", 1200, 1700, 800],
-  ["Mayo", 1500, 1560, 1600],
-];
-
 const historicValuesChartStyleOptions = {
   curveType: "function",
-  // legend: { position: "bottom", alignment: "center" },
   chartArea: { width: "60%" },
   vAxis: {
     baselineColor: "transparent",
     viewWindowMode: "explicit",
-    viewWindow: { min: 0 },
+    viewWindow: { min: 0, max: 2000 },
   },
 };
 
-const tokenListData = [
-  {
-    token: {
-      name: "Facu",
-      tag: "FAC",
-      marketValue: 145,
-      amountHoldedByCurrentUser: 28,
-    },
-    historicPrices: [
-      ["Month", "Facu"],
-      ["Diciembre", 1000],
-      ["Enero", 1500],
-      ["Febrero", 1100],
-      ["Marzo", 1300],
-      ["Abril", 1200],
-      ["Mayo", 1500],
-    ],
-    color: "blue",
-  },
-  {
-    token: {
-      name: "Polo",
-      tag: "POL",
-      marketValue: 144,
-      amountHoldedByCurrentUser: 47,
-    },
-    historicPrices: [
-      ["Month", "Polo"],
-      ["Diciembre", 1000],
-      ["Enero", 1400],
-      ["Febrero", 1100],
-      ["Marzo", 1600],
-      ["Abril", 1700],
-      ["Mayo", 1560],
-    ],
-    color: "red",
-  },
-  {
-    token: {
-      name: "Jotto",
-      tag: "JTO",
-      marketValue: 149,
-      amountHoldedByCurrentUser: 210,
-    },
-    historicPrices: [
-      ["Month", "Jotto"],
-      ["Diciembre", 1000],
-      ["Enero", 900],
-      ["Febrero", 100],
-      ["Marzo", 200],
-      ["Abril", 800],
-      ["Mayo", 1600],
-    ],
-    color: "orange",
-  },
-];
-
 export default function HomePage() {
   const authData = useContext(AuthContext);
-  const contract = useAmmControllerContract();
 
+  const { getAllTokens, isTokensReqLoading, isContractLoading } =
+    useGetAllTokens();
+
+  const [appTokens, setAppTokens] = useState<Token[] | undefined>(undefined);
   const [isSwapModalOpen, setIsSwapModalOpen] = useState(false);
+
+  const generateMockDataForHistoricPrices = (tokens: Token[]) => {
+    const randomIntFromInterval = (min: number, max: number) => {
+      return Math.floor(Math.random() * (max - min + 1) + min);
+    };
+    const mockDataForHistoricPrices: any = [
+      ["Month"],
+      ["Diciembre"],
+      ["Enero"],
+      ["Febrero"],
+      ["Marzo"],
+      ["Abril"],
+      ["Mayo"],
+      ["Junio"],
+    ];
+
+    tokens.map((item, key) => {
+      mockDataForHistoricPrices[0].push(item.name);
+
+      for (var i = 1; i < mockDataForHistoricPrices.length; i++) {
+        const randomPrice = randomIntFromInterval(0, 2000);
+        mockDataForHistoricPrices[i].push(randomPrice);
+      }
+    });
+
+    return mockDataForHistoricPrices;
+  };
+
+  const defineChartSeries = (tokens: Token[]) => {
+    const series: any = {};
+    tokens.map((item, key) => {
+      series[key] = { color: defineTokenColor(key) };
+    });
+    return series;
+  };
 
   const handleSwapTokensButtonClicked = () => {
     setIsSwapModalOpen(true);
@@ -105,54 +78,67 @@ export default function HomePage() {
     setIsSwapModalOpen(false);
   };
 
+  useEffect(() => {
+    if (!isContractLoading) {
+      const fetchTokens = async () => {
+        const tokensResponse = await getAllTokens();
+
+        setAppTokens(tokensResponse);
+      };
+
+      fetchTokens();
+    }
+  }, [isContractLoading]);
+
   return (
     <>
-      {authData.currentUser != null ? (
-        <main className="">
-          <div className="">
-            <TotalStableDisplay />
-
+      {authData.currentUser != null && appTokens && (
+        <TokensContext.Provider value={{ tokens: appTokens }}>
+          <main className="">
             <div className="">
-              <HistoricValuesChart
-                data={historicValuesChartData}
-                height={200}
-                options={historicValuesChartStyleOptions}
-              />
+              <TotalStableDisplay />
+
+              <div className="">
+                <HistoricValuesChart
+                  data={generateMockDataForHistoricPrices(appTokens)}
+                  height={200}
+                  options={historicValuesChartStyleOptions}
+                  series={defineChartSeries(appTokens)}
+                />
+              </div>
+
+              <div className="flex flex-col items-center justify-center mt-8 cursor-pointer">
+                <SwapTokensButton
+                  onClick={handleSwapTokensButtonClicked}
+                  size={8}
+                />
+                <p className="text-xs mt-4">INTERCAMBIAR TOKENS</p>
+              </div>
+
+              <Tabs className="mt-12">
+                <TabList>
+                  <Tab>Todos los tokens</Tab>
+                  <Tab>Tu balance</Tab>
+                </TabList>
+
+                <TabPanel>
+                  <div className="mt-8">
+                    <TokenList />
+                  </div>
+                </TabPanel>
+                <TabPanel>
+                  <div className="w-22 mt-8">
+                    <TokensDistributionChart data={{}} />
+                  </div>
+                </TabPanel>
+              </Tabs>
             </div>
-
-            <div className="flex flex-col items-center justify-center mt-8 cursor-pointer">
-              <SwapTokensButton
-                onClick={handleSwapTokensButtonClicked}
-                size={8}
-              />
-              <p className="text-xs mt-4">INTERCAMBIAR TOKENS</p>
-            </div>
-
-            <Tabs className="mt-12">
-              <TabList>
-                <Tab>Todos los tokens</Tab>
-                <Tab>Tu balance</Tab>
-              </TabList>
-
-              <TabPanel>
-                <div className="mt-8">
-                  <TokenList tokenItems={tokenListData} />
-                </div>
-              </TabPanel>
-              <TabPanel>
-                <div className="w-22 mt-8">
-                  <TokensDistributionChart data={{}} />
-                </div>
-              </TabPanel>
-            </Tabs>
-          </div>
-          <SwapModal
-            isModalOpen={isSwapModalOpen}
-            onCloseClicked={handleSwapModalClosed}
-          />
-        </main>
-      ) : (
-        <></>
+            <SwapModal
+              isModalOpen={isSwapModalOpen}
+              onCloseClicked={handleSwapModalClosed}
+            />
+          </main>
+        </TokensContext.Provider>
       )}
     </>
   );

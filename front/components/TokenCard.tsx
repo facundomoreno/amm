@@ -1,23 +1,22 @@
+import { Token } from "@/context/TokensContext";
 import HistoricValuesChart from "./HistoricValuesChart";
 import colors from "tailwindcss/colors";
 
-interface TokenData {
-  name: string;
-  tag: string;
-  marketValue: number;
-  amountHoldedByCurrentUser: number;
-}
+// interface TokenData {
+//   name: string;
+//   tag: string;
+//   marketValue: number;
+//   amountHoldedByCurrentUser: number;
+// }
 
 export interface TokenCardProps {
-  token: TokenData;
+  // token: TokenData;
+  token: Token;
   historicPrices: any;
   color: string;
 }
 
 const TokenCard = ({ token, historicPrices, color }: TokenCardProps) => {
-  // @ts-ignore
-  const tailwindColor = colors[color][500];
-
   const chartStyleOptions = {
     curveType: "function",
     legend: { position: "bottom", alignment: "center" },
@@ -28,15 +27,12 @@ const TokenCard = ({ token, historicPrices, color }: TokenCardProps) => {
         interval: 0,
       },
     },
-    series: {
-      0: { color: tailwindColor },
-    },
   };
   return (
     <div className="flex items-center justify-between p-4 mt-4 border-2 border-gray-200 rounded shadow-xs">
       <div className="flex items-center">
         <div
-          style={{ backgroundColor: tailwindColor }}
+          style={{ backgroundColor: color }}
           className={`w-4 h-4 rounded-full`}
         />
         <p className="pl-2">{token.name}</p>
@@ -44,12 +40,12 @@ const TokenCard = ({ token, historicPrices, color }: TokenCardProps) => {
 
       <div className="flex flex-col">
         <p className="text-xs font-bold">Valor:</p>
-        <p className="text-xs">{`${token.marketValue} $MUT`}</p>
+        <p className="text-xs">{`${0} $MUT`}</p>
       </div>
 
       <div className="flex flex-col">
         <p className="text-xs font-bold">Tenes:</p>
-        <p className="text-xs">{`${token.amountHoldedByCurrentUser} $${token.tag}`}</p>
+        <p className="text-xs">{`${0} $${token.tag}`}</p>
       </div>
 
       <div className="w-22 h-22">
@@ -59,6 +55,7 @@ const TokenCard = ({ token, historicPrices, color }: TokenCardProps) => {
           height={50}
           width={60}
           options={chartStyleOptions}
+          series={{ 0: { color } }}
         />
       </div>
     </div>

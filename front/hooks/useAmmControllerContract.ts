@@ -8,6 +8,7 @@ const contractAddress = process.env.NEXT_PUBLIC_AMM_CONTROLLER_CONTRACT;
 const useAmmControllerContract = (forcedWallet?: Wallet) => {
   const { currentUser } = useContext(AuthContext);
   const [contract, setContract] = useState<Contract | undefined>(undefined);
+  const [isContractLoading, setContractLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const generateContractForPublicViews = async () => {
@@ -48,10 +49,12 @@ const useAmmControllerContract = (forcedWallet?: Wallet) => {
       }
     };
 
-    defineContractToLoad();
+    defineContractToLoad().finally(() => {
+      setContractLoading(false);
+    });
   }, [currentUser]);
 
-  return contract;
+  return { contract, isContractLoading };
 };
 
 export default useAmmControllerContract;

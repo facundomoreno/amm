@@ -9,6 +9,7 @@ interface HistoricValuesChartProps {
   height: number;
   width?: number;
   options: any;
+  series: any;
 }
 
 const HistoricValuesChart = ({
@@ -16,6 +17,7 @@ const HistoricValuesChart = ({
   height,
   width,
   options,
+  series,
 }: HistoricValuesChartProps) => {
   // const options = {
   //   curveType: "function",
@@ -35,7 +37,7 @@ const HistoricValuesChart = ({
       width={width ? `${width}px` : "100%"}
       height={`${height}px`}
       data={data}
-      options={options}
+      options={{ ...options, series }}
     />
   );
 };

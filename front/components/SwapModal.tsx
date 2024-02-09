@@ -1,20 +1,16 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import ReactDOM from "react-dom";
 import Modal from "react-modal";
 import Select, { StylesConfig } from "react-select";
 import SwapTokensButton from "./SwapTokensButton";
-
-interface Token {
-  id: number;
-  name: string;
-  tag: string;
-}
+import { Token, TokensContext } from "@/context/TokensContext";
+import defineTokenColor from "@/utils/defineTokenColor";
 
 interface SwapModalProps {
   isModalOpen: boolean;
   onCloseClicked: () => void;
 }
-const customStyles = {
+const customModalStyles = {
   content: {
     top: "50%",
     left: "50%",
@@ -27,17 +23,35 @@ const customStyles = {
   },
 };
 
-const tokens = [
-  { id: 0, name: "Facu", tag: "FAC" },
-  { id: 1, name: "Polo", tag: "POL" },
-  { id: 2, name: "Jotto", tag: "JTO" },
-];
+const dot = (color = "transparent") => ({
+  alignItems: "center",
+  display: "flex",
 
-const options = [
-  { value: 0, label: "Facu" },
-  { value: 1, label: "Polo" },
-  { value: 2, label: "Jotto" },
-];
+  ":before": {
+    backgroundColor: color,
+    borderRadius: 10,
+    content: '" "',
+    display: "block",
+    marginRight: 8,
+    height: "1rem",
+    width: "1rem",
+  },
+});
+
+const stylesForSelect: any = {
+  input: (styles: any) => ({ ...styles, ...dot() }),
+  placeholder: (styles: any) => ({ ...styles, ...dot("#ccc") }),
+  singleValue: (styles: any, { data }: any) => ({
+    ...styles,
+    ...dot(data.value.color),
+  }),
+};
+
+// const options = [
+//   { value: 0, label: "Facu" },
+//   { value: 1, label: "Polo" },
+//   { value: 2, label: "Jotto" },
+// ];
 
 enum SwapType {
   BUYING_TOKEN,
@@ -45,14 +59,19 @@ enum SwapType {
 }
 
 const SwapModal = ({ isModalOpen, onCloseClicked }: SwapModalProps) => {
-  const [tokenIdSelected, setTokenIdSelected] = useState<number | undefined>(
-    undefined
-  );
+  const { tokens } = useContext(TokensContext);
+
+  const [tokenAddressSelected, setTokenAddressSelected] = useState<
+    string | undefined
+  >(undefined);
 
   const [swapType, setSwapType] = useState<SwapType>(SwapType.BUYING_TOKEN);
 
-  const handleSelectToken = (item: { value: number; label: string }) => {
-    setTokenIdSelected(item.value);
+  const handleSelectToken = (item: {
+    value: { address: string; color: string };
+    label: string;
+  }) => {
+    setTokenAddressSelected(item.value.address);
   };
   const handleChangeOrderOfSwap = () => {
     if (swapType == SwapType.BUYING_TOKEN) {
@@ -61,11 +80,27 @@ const SwapModal = ({ isModalOpen, onCloseClicked }: SwapModalProps) => {
       setSwapType(SwapType.BUYING_TOKEN);
     }
   };
+
+  const generateOptionsByTokens = () => {
+    const options: {
+      value: { address: string; color: string };
+      label: string;
+    }[] = [];
+
+    tokens.map((item, key) => {
+      options.push({
+        value: { address: item.address!, color: defineTokenColor(key) },
+        label: item.name,
+      });
+    });
+
+    return options;
+  };
   return (
     <Modal
       isOpen={isModalOpen}
       onRequestClose={onCloseClicked}
-      style={customStyles}
+      style={customModalStyles}
       contentLabel="Tokens Swap"
       ariaHideApp={false}
     >
@@ -73,14 +108,21 @@ const SwapModal = ({ isModalOpen, onCloseClicked }: SwapModalProps) => {
         <h1>Seleccionar token</h1>
         <Select
           className="mt-2"
-          options={options}
+          options={generateOptionsByTokens()}
           onChange={(itemSelected) => handleSelectToken(itemSelected!)}
+          menuPortalTarget={document.body}
+          styles={{
+            ...stylesForSelect,
+            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+          }}
         />
         <div className="flex items-center justify-center mt-4">
-          <p>{tokenIdSelected != undefined ? `500 $FAC disponibles` : "-"}</p>
+          <p>
+            {tokenAddressSelected != undefined ? `500 $FAC disponibles` : "-"}
+          </p>
         </div>
         <div className="min-h-44">
-          {tokenIdSelected != undefined ? (
+          {tokenAddressSelected != undefined ? (
             <>
               <div className="w-full flex justify-between px-4 py-2 mt-2 border-2 border-gray-200 bg-white rounded translate-y-2 z-0">
                 <div>
@@ -94,15 +136,23 @@ const SwapModal = ({ isModalOpen, onCloseClicked }: SwapModalProps) => {
                 <div className="flex items-center justify-center">
                   <div className="px-2 py-4 h-6 flex justify-between items-center border-2 border-gray-200 rounded">
                     <div
-                      className={`h-4 w-4 ${
-                        swapType == SwapType.SELLING_TOKEN
-                          ? "bg-orange-400"
-                          : "bg-black"
-                      } rounded-full`}
+                      style={{
+                        backgroundColor:
+                          swapType == SwapType.SELLING_TOKEN
+                            ? defineTokenColor(
+                                tokens
+                                  .map((item) => item.address)
+                                  .indexOf(tokenAddressSelected)
+                              )
+                            : "black",
+                      }}
+                      className={`h-4 w-4 rounded-full`}
                     />
                     <p className="pl-2">
                       {swapType == SwapType.SELLING_TOKEN
-                        ? tokens.find((item) => item.id == tokenIdSelected)?.tag
+                        ? tokens.find(
+                            (item) => item.address == tokenAddressSelected
+                          )?.tag
                         : "MUT"}
                     </p>
                   </div>
@@ -123,17 +173,24 @@ const SwapModal = ({ isModalOpen, onCloseClicked }: SwapModalProps) => {
                 <div className="flex items-center justify-center">
                   <div className="px-2 py-4 h-6 flex justify-between items-center border-2 border-gray-200 rounded">
                     <div
-                      className={`h-4 w-4 ${
-                        swapType == SwapType.SELLING_TOKEN
-                          ? "bg-black"
-                          : "bg-orange-400"
-                      } rounded-full`}
+                      style={{
+                        backgroundColor:
+                          swapType == SwapType.SELLING_TOKEN
+                            ? "black"
+                            : defineTokenColor(
+                                tokens
+                                  .map((item) => item.address)
+                                  .indexOf(tokenAddressSelected)
+                              ),
+                      }}
+                      className={`h-4 w-4 rounded-full`}
                     />
                     <p className="pl-2">
                       {swapType == SwapType.SELLING_TOKEN
                         ? "MUT"
-                        : tokens.find((item) => item.id == tokenIdSelected)
-                            ?.tag}
+                        : tokens.find(
+                            (item) => item.address == tokenAddressSelected
+                          )?.tag}
                     </p>
                   </div>
                 </div>

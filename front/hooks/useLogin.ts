@@ -6,7 +6,7 @@ import { WalletState } from "@/components/Registration";
 const GAS_SPONSOR_KEY = process.env.NEXT_PUBLIC_GAS_SPONSOR_KEY;
 
 const useLogin = () => {
-  const contract = useAmmControllerContract();
+  const { contract } = useAmmControllerContract();
 
   const [isLoading, setIsLoading] = useState(false);
 

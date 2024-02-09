@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import useAmmControllerContract from "./useAmmControllerContract";
 
 const useGetUserByAddress = () => {
-  const contract = useAmmControllerContract();
+  const { contract } = useAmmControllerContract();
   const [isLoading, setIsLoading] = useState(false);
 
   const getUser = useCallback(
