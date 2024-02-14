@@ -2,6 +2,7 @@ import { createContext } from "react";
 
 export interface TokensContextType {
   tokens: Token[];
+  stableCurrency: Token | undefined;
 }
 
 export interface Token {
@@ -12,4 +13,5 @@ export interface Token {
 
 export const TokensContext = createContext<TokensContextType>({
   tokens: [],
+  stableCurrency: undefined,
 });

@@ -12,11 +12,12 @@ const useGetAllTokens = () => {
     setIsLoading(true);
 
     try {
-      const response = await contract.getAllTokens();
+      const tokensResponse = await contract.getAllTokens();
+      const stableCurrencyDetail = await contract.getStableCurrencyDetails();
 
       const tokens: Token[] = [];
 
-      response.map((item: any) => {
+      tokensResponse.map((item: any) => {
         tokens.push({
           address: item[0],
           name: item[1],
@@ -24,7 +25,14 @@ const useGetAllTokens = () => {
         });
       });
 
-      return tokens;
+      return {
+        tokens,
+        stableCurrency: {
+          address: stableCurrencyDetail[0],
+          name: stableCurrencyDetail[1],
+          tag: stableCurrencyDetail[2],
+        },
+      };
     } catch (e) {
       throw e;
     } finally {

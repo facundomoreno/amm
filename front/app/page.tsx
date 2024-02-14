@@ -8,7 +8,11 @@ import TokensDistributionChart from "@/components/TokensDistributionChart";
 import TokensDistributionList from "@/components/TokensDistributionList";
 import TotalStableDisplay from "@/components/TotalStableDisplay";
 import { AuthContext } from "@/context/AuthContext";
-import { Token, TokensContext } from "@/context/TokensContext";
+import {
+  Token,
+  TokensContext,
+  TokensContextType,
+} from "@/context/TokensContext";
 import useAmmControllerContract from "@/hooks/useAmmControllerContract";
 import useGetAllTokens from "@/hooks/useGetAllTokens";
 import defineTokenColor from "@/utils/defineTokenColor";
@@ -18,13 +22,36 @@ import "react-tabs/style/react-tabs.css";
 
 const historicValuesChartStyleOptions = {
   curveType: "function",
-  chartArea: { width: "60%" },
+  chartArea: { width: "70%" },
+  legend: { position: "none" },
   vAxis: {
     baselineColor: "transparent",
     viewWindowMode: "explicit",
-    viewWindow: { min: 0, max: 2000 },
+    viewWindow: { min: 0, max: 2050 },
   },
 };
+
+const mockDataForHistoricPrices: any = [
+  ["Month"],
+  ["Diciembre"],
+  ["Enero"],
+  ["Febrero"],
+  ["Marzo"],
+  ["Abril"],
+  ["Mayo"],
+  ["Junio"],
+];
+
+const emptyHistoricPrices = [
+  ["Month", "dummy"],
+  ["Diciembre", 0],
+  ["Enero", 0],
+  ["Febrero", 0],
+  ["Marzo", 0],
+  ["Abril", 0],
+  ["Mayo", 0],
+  ["Junio", 0],
+];
 
 export default function HomePage() {
   const authData = useContext(AuthContext);
@@ -32,23 +59,21 @@ export default function HomePage() {
   const { getAllTokens, isTokensReqLoading, isContractLoading } =
     useGetAllTokens();
 
-  const [appTokens, setAppTokens] = useState<Token[] | undefined>(undefined);
+  const [appERC20s, setAppERC20s] = useState<TokensContextType | undefined>(
+    undefined
+  );
   const [isSwapModalOpen, setIsSwapModalOpen] = useState(false);
+
+  const [tokensDataForChart, setTokensDataForChart] =
+    useState(emptyHistoricPrices);
+  const [tokensInChartView, setTokensInChartView] = useState<string[]>([]);
+
+  const [chartSeries, setChartSeries] = useState<any>({});
 
   const generateMockDataForHistoricPrices = (tokens: Token[]) => {
     const randomIntFromInterval = (min: number, max: number) => {
       return Math.floor(Math.random() * (max - min + 1) + min);
     };
-    const mockDataForHistoricPrices: any = [
-      ["Month"],
-      ["Diciembre"],
-      ["Enero"],
-      ["Febrero"],
-      ["Marzo"],
-      ["Abril"],
-      ["Mayo"],
-      ["Junio"],
-    ];
 
     tokens.map((item, key) => {
       mockDataForHistoricPrices[0].push(item.name);
@@ -65,7 +90,7 @@ export default function HomePage() {
   const defineChartSeries = (tokens: Token[]) => {
     const series: any = {};
     tokens.map((item, key) => {
-      series[key] = { color: defineTokenColor(key) };
+      series[key] = { color: "transparent" };
     });
     return series;
   };
@@ -78,12 +103,39 @@ export default function HomePage() {
     setIsSwapModalOpen(false);
   };
 
+  const handleTokenChangedInChartView = (
+    tokenAddress: string,
+    tokenKey: number,
+    checked: boolean
+  ) => {
+    if (checked) {
+      const tokensSelected = [...tokensInChartView, tokenAddress];
+      setTokensInChartView(tokensSelected);
+
+      setChartSeries({
+        ...chartSeries,
+        [tokenKey]: { color: defineTokenColor(tokenKey) },
+      });
+    } else {
+      const tokensSelected = tokensInChartView.filter((item) => {
+        return item !== tokenAddress;
+      });
+      setTokensInChartView(tokensSelected);
+
+      setChartSeries({ ...chartSeries, [tokenKey]: { color: "transparent" } });
+    }
+  };
+
   useEffect(() => {
     if (!isContractLoading) {
       const fetchTokens = async () => {
         const tokensResponse = await getAllTokens();
 
-        setAppTokens(tokensResponse);
+        setAppERC20s(tokensResponse);
+        setTokensDataForChart(
+          generateMockDataForHistoricPrices(tokensResponse?.tokens!)
+        );
+        setChartSeries(defineChartSeries(tokensResponse?.tokens!));
       };
 
       fetchTokens();
@@ -92,19 +144,43 @@ export default function HomePage() {
 
   return (
     <>
-      {authData.currentUser != null && appTokens && (
-        <TokensContext.Provider value={{ tokens: appTokens }}>
+      {authData.currentUser != null && appERC20s && (
+        <TokensContext.Provider value={appERC20s}>
           <main className="">
             <div className="">
               <TotalStableDisplay />
 
-              <div className="">
+              <div className="border-2 border-gray-200 rounded shadow-xs mt-8 p-4">
                 <HistoricValuesChart
-                  data={generateMockDataForHistoricPrices(appTokens)}
+                  data={tokensDataForChart}
                   height={200}
                   options={historicValuesChartStyleOptions}
-                  series={defineChartSeries(appTokens)}
+                  series={chartSeries}
                 />
+                <div className="flex justify-center">
+                  <div className="grid grid-cols-3 gap-4">
+                    {appERC20s.tokens.map((item, key) => (
+                      <div className="flex items-center" key={key}>
+                        <input
+                          type="checkbox"
+                          style={{
+                            accentColor: defineTokenColor(key),
+                            outline: `1px auto ${defineTokenColor(key)}`,
+                          }}
+                          onChange={(e) =>
+                            handleTokenChangedInChartView(
+                              item.address!,
+                              key,
+                              e.target.checked
+                            )
+                          }
+                          checked={tokensInChartView.includes(item.address!)}
+                        />
+                        <p className="pl-2">{item.name}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div className="flex flex-col items-center justify-center mt-8 cursor-pointer">

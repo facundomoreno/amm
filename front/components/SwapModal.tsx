@@ -1,10 +1,14 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import Modal from "react-modal";
 import Select, { StylesConfig } from "react-select";
 import SwapTokensButton from "./SwapTokensButton";
 import { Token, TokensContext } from "@/context/TokensContext";
 import defineTokenColor from "@/utils/defineTokenColor";
+import useGetInfoForTokenSwap, {
+  SwapDetailType,
+} from "@/hooks/useGetInfoForTokenSwap";
+import { AuthContext } from "@/context/AuthContext";
 
 interface SwapModalProps {
   isModalOpen: boolean;
@@ -47,25 +51,31 @@ const stylesForSelect: any = {
   }),
 };
 
-// const options = [
-//   { value: 0, label: "Facu" },
-//   { value: 1, label: "Polo" },
-//   { value: 2, label: "Jotto" },
-// ];
-
 enum SwapType {
   BUYING_TOKEN,
   SELLING_TOKEN,
 }
 
 const SwapModal = ({ isModalOpen, onCloseClicked }: SwapModalProps) => {
-  const { tokens } = useContext(TokensContext);
+  const { tokens, stableCurrency } = useContext(TokensContext);
+  const { currentUser } = useContext(AuthContext);
 
   const [tokenAddressSelected, setTokenAddressSelected] = useState<
     string | undefined
   >(undefined);
 
+  const [inputsValues, setInputsValues] = useState<{
+    fromInput: number;
+    toInput: number;
+  }>({ fromInput: 0, toInput: 0 });
+
+  const [swapDetail, setSwapDetail] = useState<SwapDetailType | undefined>(
+    undefined
+  );
+
   const [swapType, setSwapType] = useState<SwapType>(SwapType.BUYING_TOKEN);
+
+  const { getSwapDetail, isDetailLoading } = useGetInfoForTokenSwap();
 
   const handleSelectToken = (item: {
     value: { address: string; color: string };
@@ -96,6 +106,62 @@ const SwapModal = ({ isModalOpen, onCloseClicked }: SwapModalProps) => {
 
     return options;
   };
+
+  const handleAmountGivenChanged = (pretendedValue: number) => {
+    let expectedAmountReceived =
+      swapType == SwapType.BUYING_TOKEN
+        ? Math.floor(pretendedValue / swapDetail?.tokenPrice!)
+        : Math.ceil(pretendedValue * swapDetail?.tokenPrice!);
+
+    setInputsValues({
+      fromInput: pretendedValue,
+      toInput: expectedAmountReceived,
+    });
+  };
+
+  const handleAmountReceivedChanged = (pretendedValue: number) => {
+    const expectedAmountToGive =
+      swapType == SwapType.BUYING_TOKEN
+        ? Math.ceil(pretendedValue * swapDetail?.tokenPrice!)
+        : Math.floor(pretendedValue / swapDetail?.tokenPrice!);
+
+    setInputsValues({
+      fromInput: expectedAmountToGive,
+      toInput: pretendedValue,
+    });
+  };
+
+  const isExcedingFromAmountAvailable = () => {
+    if (swapType == SwapType.BUYING_TOKEN) {
+      if (inputsValues.fromInput > swapDetail?.userBalanceInStable!) {
+        return true;
+      }
+    } else {
+      if (inputsValues.fromInput > swapDetail?.userBalanceInToken!) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  useEffect(() => {
+    if (tokenAddressSelected) {
+      const fetchSwapDetail = async () => {
+        const details = await getSwapDetail(
+          currentUser?.address!,
+          tokenAddressSelected
+        );
+
+        setSwapDetail(details);
+      };
+
+      fetchSwapDetail();
+    }
+  }, [tokenAddressSelected]);
+
+  useEffect(() => {
+    setInputsValues({ fromInput: 0, toInput: 0 });
+  }, [swapType]);
   return (
     <Modal
       isOpen={isModalOpen}
@@ -118,11 +184,22 @@ const SwapModal = ({ isModalOpen, onCloseClicked }: SwapModalProps) => {
         />
         <div className="flex items-center justify-center mt-4">
           <p>
-            {tokenAddressSelected != undefined ? `500 $FAC disponibles` : "-"}
+            {swapDetail != undefined
+              ? `${
+                  swapType == SwapType.BUYING_TOKEN
+                    ? `${swapDetail.userBalanceInStable} $${stableCurrency?.tag}`
+                    : `${swapDetail.userBalanceInToken} $${
+                        tokens.find(
+                          (item) => item.address == tokenAddressSelected
+                        )?.tag
+                      }`
+                } disponibles`
+              : "-"}
           </p>
         </div>
+
         <div className="min-h-44">
-          {tokenAddressSelected != undefined ? (
+          {tokenAddressSelected != undefined && swapDetail != undefined ? (
             <>
               <div className="w-full flex justify-between px-4 py-2 mt-2 border-2 border-gray-200 bg-white rounded translate-y-2 z-0">
                 <div>
@@ -130,8 +207,20 @@ const SwapModal = ({ isModalOpen, onCloseClicked }: SwapModalProps) => {
                   <input
                     type="number"
                     placeholder="0"
-                    className="appearance-none border-opacity-0 rounded w-12 mt-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    min={0}
+                    onChange={(e) =>
+                      handleAmountGivenChanged(e.target.valueAsNumber)
+                    }
+                    value={
+                      inputsValues.fromInput == 0 ? "" : inputsValues.fromInput
+                    }
+                    className="appearance-none border-opacity-0 rounded w-full pr-4 mt-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                   />
+                  {isExcedingFromAmountAvailable() && (
+                    <p className="text-red-500 text-xs">
+                      Cantidad insuficiente
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center justify-center">
                   <div className="px-2 py-4 h-6 flex justify-between items-center border-2 border-gray-200 rounded">
@@ -167,7 +256,14 @@ const SwapModal = ({ isModalOpen, onCloseClicked }: SwapModalProps) => {
                   <input
                     type="number"
                     placeholder="0"
-                    className="appearance-none border-opacity-0 rounded w-12 mt-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    min={0}
+                    onChange={(e) =>
+                      handleAmountReceivedChanged(e.target.valueAsNumber)
+                    }
+                    value={
+                      inputsValues.toInput == 0 ? "" : inputsValues.toInput
+                    }
+                    className="appearance-none border-opacity-0 rounded w-full pr-4 mt-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                   />
                 </div>
                 <div className="flex items-center justify-center">

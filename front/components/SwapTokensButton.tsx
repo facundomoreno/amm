@@ -6,8 +6,8 @@ interface SwapTokensButton {
 }
 
 const SwapTokensButton = ({ onClick, size }: SwapTokensButton) => {
-  const width = `w-${size}`;
-  const height = `h-${size}`;
+  const width = `w-[${size}px]`;
+  const height = `h-[${size}px]`;
   return (
     <div
       className={`flex ${width} ${height} items-center justify-center bg-black rounded-full cursor-pointer p-2`}

@@ -28,7 +28,7 @@ contract AMMController {
         string name;
         string tag;
     }
-    struct GetAllTokensReturns {
+    struct TokenDataReturned {
         address tokenAddress;
         string name;
         string tag;
@@ -244,8 +244,8 @@ contract AMMController {
         return users[_userAddress];
     }
 
-    function getAllTokens() public view returns (GetAllTokensReturns[] memory) {
-        GetAllTokensReturns[] memory tokensDataList = new GetAllTokensReturns[](
+    function getAllTokens() public view returns (TokenDataReturned[] memory) {
+        TokenDataReturned[] memory tokensDataList = new TokenDataReturned[](
             tokensCount
         );
         for (uint256 i = 0; i < tokensCount; i++) {
@@ -255,6 +255,20 @@ contract AMMController {
             tokensDataList[i].tag = tokenX.symbol();
         }
         return tokensDataList;
+    }
+
+    function getStableCurrencyDetails()
+        public
+        view
+        returns (TokenDataReturned memory)
+    {
+        TokenDataReturned memory stableCurrencyDetails;
+        ERC20 stableCurrencyERC20 = ERC20(stableCurrency);
+        stableCurrencyDetails.tokenAddress = stableCurrency;
+        stableCurrencyDetails.name = stableCurrencyERC20.name();
+        stableCurrencyDetails.tag = stableCurrencyERC20.symbol();
+
+        return stableCurrencyDetails;
     }
 
     function getPoolForToken(address _token) public view returns (address) {
