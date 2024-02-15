@@ -4,7 +4,8 @@ import useAmmControllerContract from "./useAmmControllerContract";
 export interface SwapDetailType {
   userBalanceInStable: number;
   userBalanceInToken: number;
-  tokenPrice: number;
+  poolStableReserve: number;
+  poolTokenReserve: number;
 }
 
 const useGetInfoForTokenSwap = () => {
@@ -39,14 +40,11 @@ const useGetInfoForTokenSwap = () => {
           userAddress
         );
 
-        const tokenPrice = Math.floor(
-          Number(poolStableReserve) / Number(poolTokenReserve)
-        );
-
         return {
           userBalanceInStable: Number(userBalanceInStable),
           userBalanceInToken: Number(userBalanceInToken),
-          tokenPrice,
+          poolStableReserve: Number(poolStableReserve),
+          poolTokenReserve: Number(poolTokenReserve),
         };
       } catch (e) {
         throw e;

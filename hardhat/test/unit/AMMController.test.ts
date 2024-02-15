@@ -330,6 +330,8 @@ const {
           assert.equal(Number(userBalanceInStableBefore), 0);
           assert.isAbove(Number(userBalanceInTokenBefore), 0);
 
+          console.log("BALANCE IN TOKEN BEFORE", userBalanceInTokenBefore);
+
           await tokenContract
             .connect(trader)
             .approve(ammControllerContract.target, userBalanceInTokenBefore);
@@ -344,6 +346,8 @@ const {
 
           const userBalanceInStableAfter =
             await stableCurrencyContract.balanceOf(trader.address);
+
+          console.log("BALANCE IN STABLE AFTER", userBalanceInStableAfter);
           const userBalanceInTokenAfter = await tokenContract.balanceOf(
             trader.address
           );

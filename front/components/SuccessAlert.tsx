@@ -6,14 +6,19 @@ import "react-toastify/dist/ReactToastify.css";
 interface SuccessAlertProps {
   message: string;
   showAlert: boolean;
+  miliSeconds?: number;
 }
 
-const SuccessAlert = ({ message, showAlert }: SuccessAlertProps) => {
+const SuccessAlert = ({
+  message,
+  showAlert,
+  miliSeconds,
+}: SuccessAlertProps) => {
   useEffect(() => {
     if (showAlert) {
       toast.success(message, {
         position: "bottom-center",
-        autoClose: 5000,
+        autoClose: miliSeconds ?? 5000,
         hideProgressBar: false,
         closeOnClick: true,
         pauseOnHover: true,
