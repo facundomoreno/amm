@@ -1,6 +1,6 @@
 "use client";
 import HistoricValuesChart from "@/components/HistoricValuesChart";
-import SwapModal from "@/components/SwapModal";
+import SwapModal, { SwapType } from "@/components/SwapModal";
 import SwapTokensButton from "@/components/SwapTokensButton";
 import TokenCard from "@/components/TokenCard";
 import TokenList from "@/components/TokenList";
@@ -64,6 +64,9 @@ export default function HomePage() {
     undefined
   );
   const [isSwapModalOpen, setIsSwapModalOpen] = useState(false);
+  const [swapModalPreData, setSwapModalPreData] = useState<
+    { addressSelected: string; swapType: SwapType } | undefined
+  >(undefined);
 
   const [tokensDataForLineChart, setTokensDataForLineChart] =
     useState(emptyHistoricPrices);
@@ -118,6 +121,7 @@ export default function HomePage() {
   };
 
   const handleSwapTokensButtonClicked = () => {
+    setSwapModalPreData(undefined);
     setIsSwapModalOpen(true);
   };
 
@@ -146,6 +150,17 @@ export default function HomePage() {
 
       setChartSeries({ ...chartSeries, [tokenKey]: { color: "transparent" } });
     }
+  };
+
+  const handleBuyOrSellTokenClicked = (
+    addressSelected: string,
+    swapType: SwapType
+  ) => {
+    setSwapModalPreData({
+      addressSelected,
+      swapType,
+    });
+    setIsSwapModalOpen(true);
   };
 
   useEffect(() => {
@@ -232,7 +247,20 @@ export default function HomePage() {
 
                 <TabPanel>
                   <div className="mt-8">
-                    <TokenList />
+                    <TokenList
+                      onBuyTokenClicked={(address: string) =>
+                        handleBuyOrSellTokenClicked(
+                          address,
+                          SwapType.BUYING_TOKEN
+                        )
+                      }
+                      onSellTokenClicked={(address: string) =>
+                        handleBuyOrSellTokenClicked(
+                          address,
+                          SwapType.SELLING_TOKEN
+                        )
+                      }
+                    />
                   </div>
                 </TabPanel>
                 <TabPanel>
@@ -248,6 +276,7 @@ export default function HomePage() {
             <SwapModal
               isModalOpen={isSwapModalOpen}
               onCloseClicked={handleSwapModalClosed}
+              swapPreData={swapModalPreData}
             />
             <div ref={bottomOfPageRef} />
           </main>

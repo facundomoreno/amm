@@ -16,7 +16,19 @@ import SuccessAlert from "./SuccessAlert";
 interface SwapModalProps {
   isModalOpen: boolean;
   onCloseClicked: () => void;
+  swapPreData?: { addressSelected: string; swapType: SwapType };
 }
+
+export enum SwapType {
+  BUYING_TOKEN,
+  SELLING_TOKEN,
+}
+
+interface SelectOption {
+  value: { address: string; color: string };
+  label: string;
+}
+
 const customModalStyles = {
   content: {
     top: "50%",
@@ -56,15 +68,15 @@ const stylesForSelect: any = {
 
 const TIME_FOR_TOAST = 1500;
 
-enum SwapType {
-  BUYING_TOKEN,
-  SELLING_TOKEN,
-}
-
-const SwapModal = ({ isModalOpen, onCloseClicked }: SwapModalProps) => {
+const SwapModal = ({
+  isModalOpen,
+  onCloseClicked,
+  swapPreData,
+}: SwapModalProps) => {
   const { tokens, stableCurrency } = useContext(TokensContext);
   const { currentUser } = useContext(AuthContext);
 
+  const [selectOptions, setSelectOptions] = useState<SelectOption[]>([]);
   const [tokenAddressSelected, setTokenAddressSelected] = useState<
     string | undefined
   >(undefined);
@@ -83,10 +95,7 @@ const SwapModal = ({ isModalOpen, onCloseClicked }: SwapModalProps) => {
   const { getSwapDetail, isDetailLoading } = useGetInfoForTokenSwap();
   const { swap, isSwapLoading, swapSucceded } = useSwapTokens();
 
-  const handleSelectToken = (item: {
-    value: { address: string; color: string };
-    label: string;
-  }) => {
+  const handleSelectToken = (item: SelectOption) => {
     setTokenAddressSelected(item.value.address);
   };
   const handleChangeOrderOfSwap = () => {
@@ -98,10 +107,7 @@ const SwapModal = ({ isModalOpen, onCloseClicked }: SwapModalProps) => {
   };
 
   const generateOptionsByTokens = () => {
-    const options: {
-      value: { address: string; color: string };
-      label: string;
-    }[] = [];
+    const options: SelectOption[] = [];
 
     tokens.map((item, key) => {
       options.push({
@@ -211,6 +217,23 @@ const SwapModal = ({ isModalOpen, onCloseClicked }: SwapModalProps) => {
       }, TIME_FOR_TOAST);
     }
   }, [swapSucceded]);
+
+  useEffect(() => {
+    if (swapPreData) {
+      setTokenAddressSelected(swapPreData.addressSelected);
+      setSwapType(swapPreData.swapType);
+    } else {
+      setSwapDetail(undefined);
+      setTokenAddressSelected(undefined);
+    }
+  }, [swapPreData, isModalOpen]);
+
+  useEffect(() => {
+    if (tokens) {
+      setSelectOptions(generateOptionsByTokens());
+    }
+  }, [tokens]);
+
   return (
     <>
       <Modal
@@ -226,8 +249,17 @@ const SwapModal = ({ isModalOpen, onCloseClicked }: SwapModalProps) => {
           <h1>Seleccionar token</h1>
           <Select
             className="mt-2"
-            options={generateOptionsByTokens()}
-            onChange={(itemSelected) => handleSelectToken(itemSelected!)}
+            options={selectOptions}
+            defaultValue={
+              swapPreData
+                ? selectOptions[
+                    tokens.findIndex(
+                      (item) => item.address == swapPreData.addressSelected
+                    )
+                  ]
+                : undefined
+            }
+            onChange={(itemSelected: any) => handleSelectToken(itemSelected!)}
             menuPortalTarget={document.body}
             styles={{
               ...stylesForSelect,

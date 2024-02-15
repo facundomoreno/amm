@@ -4,7 +4,8 @@ import { TokensContext } from "@/context/TokensContext";
 import defineTokenColor from "@/utils/defineTokenColor";
 
 interface TokenListProps {
-  // tokenItems: TokenCardProps[];
+  onBuyTokenClicked: (address: string) => void;
+  onSellTokenClicked: (address: string) => void;
 }
 
 const mockHistoricPrices = [
@@ -17,7 +18,10 @@ const mockHistoricPrices = [
   ["Mayo", 1560],
 ];
 
-const TokenList = ({}: TokenListProps) => {
+const TokenList = ({
+  onBuyTokenClicked,
+  onSellTokenClicked,
+}: TokenListProps) => {
   const { tokens, stableCurrency } = useContext(TokensContext);
   return (
     <div>
@@ -28,6 +32,8 @@ const TokenList = ({}: TokenListProps) => {
           stableCurrency={stableCurrency!}
           color={defineTokenColor(key)}
           key={key}
+          onBuyTokenClicked={(address: string) => onBuyTokenClicked(address)}
+          onSellTokenClicked={(address: string) => onSellTokenClicked(address)}
         />
       ))}
     </div>

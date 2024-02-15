@@ -17,7 +17,7 @@ const Header = ({ username, address, onLogoutClicked }: HeaderProps) => {
           </div>
           <button
             onClick={onLogoutClicked}
-            className="ml-4 flex items-center justify-center py-1 px-4 border-2 border-black text-black text-xs hover:bg-red-700 text-white font-bold rounded"
+            className="ml-4 flex items-center justify-center py-1 px-4 border-2 border-black text-black text-xs hover:bg-red-700 font-bold rounded"
           >
             Log out
           </button>
