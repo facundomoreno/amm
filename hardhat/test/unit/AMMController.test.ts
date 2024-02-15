@@ -373,6 +373,8 @@ const {
           const priceOfTokenBefore =
             Number(poolStableReserve) / Number(poolTokenReserve);
 
+          console.log("PRICE before", priceOfTokenBefore);
+
           assert.equal(
             priceOfTokenBefore,
             ammCArgs.initialConversionFromTokenToStable
@@ -405,6 +407,8 @@ const {
 
           const priceOfTokenAfter =
             Number(poolStableReserveAfter) / Number(poolTokenReserveAfter);
+
+          console.log("PRICE after", priceOfTokenAfter);
 
           assert.isAbove(priceOfTokenAfter, priceOfTokenBefore);
 

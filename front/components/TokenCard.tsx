@@ -14,9 +14,15 @@ export interface TokenCardProps {
   token: Token;
   historicPrices: any;
   color: string;
+  stableCurrency: Token;
 }
 
-const TokenCard = ({ token, historicPrices, color }: TokenCardProps) => {
+const TokenCard = ({
+  token,
+  historicPrices,
+  color,
+  stableCurrency,
+}: TokenCardProps) => {
   const chartStyleOptions = {
     curveType: "function",
     legend: { position: "bottom", alignment: "center" },
@@ -40,12 +46,14 @@ const TokenCard = ({ token, historicPrices, color }: TokenCardProps) => {
 
       <div className="flex flex-col">
         <p className="text-xs font-bold">Valor:</p>
-        <p className="text-xs">{`${0} $MUT`}</p>
+        <p className="text-xs">{`${
+          token.marketValue?.toString().split(".")[0]
+        } $${stableCurrency.tag}`}</p>
       </div>
 
       <div className="flex flex-col">
         <p className="text-xs font-bold">Tenes:</p>
-        <p className="text-xs">{`${0} $${token.tag}`}</p>
+        <p className="text-xs">{`${token.currentUserBalance} $${token.tag}`}</p>
       </div>
 
       <div className="w-22 h-22">

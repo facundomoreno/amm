@@ -18,13 +18,14 @@ const mockHistoricPrices = [
 ];
 
 const TokenList = ({}: TokenListProps) => {
-  const { tokens } = useContext(TokensContext);
+  const { tokens, stableCurrency } = useContext(TokensContext);
   return (
     <div>
       {tokens.map((item, key) => (
         <TokenCard
           token={item}
           historicPrices={mockHistoricPrices}
+          stableCurrency={stableCurrency!}
           color={defineTokenColor(key)}
           key={key}
         />

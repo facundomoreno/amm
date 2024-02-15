@@ -1,9 +1,11 @@
-import { useCallback, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 import useAmmControllerContract from "./useAmmControllerContract";
 import { Token } from "@/context/TokensContext";
+import { AuthContext } from "@/context/AuthContext";
 
 const useGetAllTokens = () => {
   const { contract, isContractLoading } = useAmmControllerContract();
+  const { currentUser } = useContext(AuthContext);
   const [isTokensReqLoading, setIsLoading] = useState(false);
 
   const getAllTokens = useCallback(async () => {
@@ -17,13 +19,33 @@ const useGetAllTokens = () => {
 
       const tokens: Token[] = [];
 
-      tokensResponse.map((item: any) => {
-        tokens.push({
-          address: item[0],
-          name: item[1],
-          tag: item[2],
-        });
-      });
+      const userBalanceInStable = await contract.getUserBalanceInStableCurrency(
+        currentUser?.address
+      );
+      await Promise.all(
+        tokensResponse.map(async (item: any) => {
+          const userBalance = await contract.getUserBalanceInToken(
+            currentUser?.address,
+            item[0]
+          );
+
+          const poolStableReserve = await contract.getPoolStableCurrencyReserve(
+            item[0]
+          );
+          const poolTokenReserve = await contract.getPoolTokenReserve(item[0]);
+
+          const marketValue = Math.ceil(
+            Math.abs(Number(poolStableReserve) / (1 - Number(poolTokenReserve)))
+          );
+          tokens.push({
+            address: item[0],
+            name: item[1],
+            tag: item[2],
+            currentUserBalance: Number(userBalance),
+            marketValue,
+          });
+        })
+      );
 
       return {
         tokens,
@@ -31,6 +53,7 @@ const useGetAllTokens = () => {
           address: stableCurrencyDetail[0],
           name: stableCurrencyDetail[1],
           tag: stableCurrencyDetail[2],
+          currentUserBalance: Number(userBalanceInStable),
         },
       };
     } catch (e) {

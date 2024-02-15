@@ -16,7 +16,7 @@ import {
 import useAmmControllerContract from "@/hooks/useAmmControllerContract";
 import useGetAllTokens from "@/hooks/useGetAllTokens";
 import defineTokenColor from "@/utils/defineTokenColor";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
 
@@ -54,6 +54,7 @@ const emptyHistoricPrices = [
 ];
 
 export default function HomePage() {
+  const bottomOfPageRef = useRef(null);
   const authData = useContext(AuthContext);
 
   const { getAllTokens, isTokensReqLoading, isContractLoading } =
@@ -64,11 +65,17 @@ export default function HomePage() {
   );
   const [isSwapModalOpen, setIsSwapModalOpen] = useState(false);
 
-  const [tokensDataForChart, setTokensDataForChart] =
+  const [tokensDataForLineChart, setTokensDataForLineChart] =
     useState(emptyHistoricPrices);
+
+  const [tokensDataForPieChart, setTokensDataForPieChart] = useState([
+    "Token",
+    "Amount holded",
+  ]);
   const [tokensInChartView, setTokensInChartView] = useState<string[]>([]);
 
   const [chartSeries, setChartSeries] = useState<any>({});
+  const [chartSlices, setChartSlices] = useState<any>({});
 
   const generateMockDataForHistoricPrices = (tokens: Token[]) => {
     const randomIntFromInterval = (min: number, max: number) => {
@@ -87,7 +94,22 @@ export default function HomePage() {
     return mockDataForHistoricPrices;
   };
 
-  const defineChartSeries = (tokens: Token[]) => {
+  const generatePieChartData = (tokens: Token[]) => {
+    const data: any = [["Token", "Amount holded"]];
+    const slices: any = {};
+
+    tokens.map((item, key) => {
+      if (item.currentUserBalance > 0) {
+        slices[data.length - 1] = { color: defineTokenColor(key) };
+        data.push([item.name, item.currentUserBalance]);
+      }
+    });
+
+    setTokensDataForPieChart(data);
+    setChartSlices(slices);
+  };
+
+  const defineLineChartSeries = (tokens: Token[]) => {
     const series: any = {};
     tokens.map((item, key) => {
       series[key] = { color: "transparent" };
@@ -132,10 +154,12 @@ export default function HomePage() {
         const tokensResponse = await getAllTokens();
 
         setAppERC20s(tokensResponse);
-        setTokensDataForChart(
+        setTokensDataForLineChart(
           generateMockDataForHistoricPrices(tokensResponse?.tokens!)
         );
-        setChartSeries(defineChartSeries(tokensResponse?.tokens!));
+        setChartSeries(defineLineChartSeries(tokensResponse?.tokens!));
+
+        generatePieChartData(tokensResponse?.tokens!);
       };
 
       fetchTokens();
@@ -146,18 +170,18 @@ export default function HomePage() {
     <>
       {authData.currentUser != null && appERC20s && (
         <TokensContext.Provider value={appERC20s}>
-          <main className="">
-            <div className="">
+          <main>
+            <div>
               <TotalStableDisplay />
 
               <div className="border-2 border-gray-200 rounded shadow-xs mt-8 p-4">
                 <HistoricValuesChart
-                  data={tokensDataForChart}
+                  data={tokensDataForLineChart}
                   height={200}
                   options={historicValuesChartStyleOptions}
                   series={chartSeries}
                 />
-                <div className="flex justify-center">
+                <div className="flex justify-center mt-4">
                   <div className="grid grid-cols-3 gap-4">
                     {appERC20s.tokens.map((item, key) => (
                       <div className="flex items-center" key={key}>
@@ -194,7 +218,16 @@ export default function HomePage() {
               <Tabs className="mt-12">
                 <TabList>
                   <Tab>Todos los tokens</Tab>
-                  <Tab>Tu balance</Tab>
+                  <Tab
+                    onClick={() => {
+                      // @ts-ignore
+                      bottomOfPageRef.current.scrollIntoView({
+                        behavior: "smooth",
+                      });
+                    }}
+                  >
+                    Tu balance
+                  </Tab>
                 </TabList>
 
                 <TabPanel>
@@ -204,7 +237,10 @@ export default function HomePage() {
                 </TabPanel>
                 <TabPanel>
                   <div className="w-22 mt-8">
-                    <TokensDistributionChart data={{}} />
+                    <TokensDistributionChart
+                      data={tokensDataForPieChart}
+                      chartSlices={chartSlices}
+                    />
                   </div>
                 </TabPanel>
               </Tabs>
@@ -213,6 +249,7 @@ export default function HomePage() {
               isModalOpen={isSwapModalOpen}
               onCloseClicked={handleSwapModalClosed}
             />
+            <div ref={bottomOfPageRef} />
           </main>
         </TokensContext.Provider>
       )}

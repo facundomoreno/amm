@@ -6,9 +6,11 @@ export interface TokensContextType {
 }
 
 export interface Token {
-  address?: string;
+  address: string;
   name: string;
   tag: string;
+  currentUserBalance: number;
+  marketValue?: number;
 }
 
 export const TokensContext = createContext<TokensContextType>({

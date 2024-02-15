@@ -193,6 +193,7 @@ const SwapModal = ({ isModalOpen, onCloseClicked }: SwapModalProps) => {
         );
 
         setSwapDetail(details);
+        setInputsValues({ fromInput: 0, toInput: 0 });
       };
 
       fetchSwapDetail();
