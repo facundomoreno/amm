@@ -1,4 +1,3 @@
-import { Wallet } from "ethers";
 import { createContext } from "react";
 
 export interface AuthContextType {

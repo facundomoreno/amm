@@ -24,7 +24,7 @@ const TokenList = ({
 }: TokenListProps) => {
   const { tokens, stableCurrency } = useContext(TokensContext);
   return (
-    <div>
+    <div className="grid grid-cols-1 gap-4">
       {tokens.map((item, key) => (
         <TokenCard
           token={item}
