@@ -216,6 +216,17 @@ const {
             "AMMController_UsernameInUse"
           );
         });
+        it("fails if username is too long", async () => {
+          const signers = await ethers.getSigners();
+          const user1 = signers[1];
+          const longUsername = "ThisIsAVeryVeryVeryVeryVeryVeryLongName";
+          await expect(
+            ammControllerContract.connect(user1).createUser(longUsername)
+          ).to.be.revertedWithCustomError(
+            ammControllerContract,
+            "AMMController_UsernameLengthOf35Exceded"
+          );
+        });
       });
 
       describe("Tokens trading", () => {

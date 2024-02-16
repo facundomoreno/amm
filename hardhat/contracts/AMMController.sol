@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "../node_modules/hardhat/console.sol";
 
 error AMMController_UserAlreadyRegistered();
+error AMMController_UsernameLengthOf35Exceded();
 error AMMController_UsernameInUse();
 error AMMController_OnlyOwnerCanCallThisFunction();
 error AMMController_InvalidTokenPair();
@@ -96,6 +97,10 @@ contract AMMController {
 
     function createUser(string memory _username) public {
         User storage userToCreate = users[msg.sender];
+        bytes memory usernameToBytes = bytes(_username);
+        if (usernameToBytes.length > 35) {
+            revert AMMController_UsernameLengthOf35Exceded();
+        }
         if (userToCreate.isRegistered) {
             revert AMMController_UserAlreadyRegistered();
         }

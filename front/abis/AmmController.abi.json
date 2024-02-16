@@ -95,6 +95,11 @@
     "type": "error"
   },
   {
+    "inputs": [],
+    "name": "AMMController_UsernameLengthOf35Exceded",
+    "type": "error"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
