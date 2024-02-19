@@ -21,7 +21,9 @@ const useRegistration = () => {
         // let url = "https://rpc.sepolia.org";
 
         const provider = new ethers.JsonRpcProvider(url);
+
         const gasSponsorWallet = new ethers.Wallet(GAS_SPONSOR_KEY!, provider);
+
         const newUserWallet = new ethers.Wallet(
           userWallet?.privateKey!,
           provider
@@ -31,16 +33,70 @@ const useRegistration = () => {
           newUserWallet.address
         );
 
+        // hacer chequeos para reducir la tasa de error
+
         if (!userAlreadyRegistered) {
+          let gasSponsorTxNonce = await gasSponsorWallet.getNonce();
+          const gasFeeEstimation = await contract.createUser.estimateGas(
+            username
+          ); // @ts-ignore
+
+          const gasPrice = (await provider.getFeeData()).gasPrice;
+
+          const aproxEthToSponsor = Number(gasFeeEstimation) * Number(gasPrice);
+          console.log(aproxEthToSponsor);
           await gasSponsorWallet.sendTransaction({
             from: gasSponsorWallet.address,
             to: newUserWallet.address,
-            value: ethers.parseEther("2"),
+            value: aproxEthToSponsor,
+            nonce: gasSponsorTxNonce,
           });
 
-          // @ts-ignore
-          const tx = await contract.connect(newUserWallet).createUser(username);
-          await tx.wait();
+          gasSponsorTxNonce += 1;
+
+          let success = false;
+          let retries = 0;
+          let ethSponsorMultiplier = 0.01;
+
+          while (!success && retries <= 15) {
+            retries += 1;
+            try {
+              console.log("VOY A PROBAR CREAR EL USUARIO");
+              await gasSponsorWallet.sendTransaction({
+                from: gasSponsorWallet.address,
+                to: newUserWallet.address,
+                value: Math.ceil(aproxEthToSponsor * ethSponsorMultiplier),
+                nonce: gasSponsorTxNonce,
+              });
+              gasSponsorTxNonce += 1;
+              ethSponsorMultiplier *= 2;
+
+              const tx = await contract
+                .connect(newUserWallet)
+                // @ts-ignore
+                .createUser(username);
+              await tx.wait();
+
+              success = true;
+            } catch (e: any) {
+              let forceTxToFinish = false;
+              if (typeof e.message != undefined) {
+                if (
+                  !e.message.includes(
+                    "sender doesn't have enough funds to send tx"
+                  )
+                ) {
+                  forceTxToFinish = true;
+                }
+              } else {
+                forceTxToFinish = true;
+              }
+
+              if (retries == 15 || forceTxToFinish) {
+                throw e;
+              }
+            }
+          }
         } else {
           throw new Error("User already registered");
         }

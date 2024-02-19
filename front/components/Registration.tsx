@@ -28,6 +28,12 @@ const Registration = ({ onUserCreated }: RegistrationProps) => {
   const [wallet, setWallet] = useState<WalletState | undefined>(undefined);
   const [copiedKey, setCopiedKey] = useState<boolean>(false);
 
+  const checkSpecialChar = (e: any) => {
+    if (!/[0-9a-zA-Z._]/.test(e.key)) {
+      e.preventDefault();
+    }
+  };
+
   const handleCopyPrivateKey = () => {
     navigator.clipboard.writeText(wallet?.privateKey!);
     setCopiedKey(true);
@@ -102,7 +108,7 @@ const Registration = ({ onUserCreated }: RegistrationProps) => {
         )}
 
         <label htmlFor="usernameInput" className="block text-md mb-1 mt-4">
-          Tu nombre
+          Nombre de usuario
         </label>
         <input
           id="usernameInput"
@@ -112,6 +118,14 @@ const Registration = ({ onUserCreated }: RegistrationProps) => {
           name="name"
           onChange={(e) => setUsername(e.target.value)}
           value={username}
+          maxLength={35}
+          onKeyDown={(e) => checkSpecialChar(e)}
+          onKeyUpCapture={(e) => checkSpecialChar(e)}
+          onKeyDownCapture={(e) => checkSpecialChar(e)}
+          onPaste={(e: any) => {
+            e.preventDefault();
+            return false;
+          }}
         />
         <button
           type="submit"
