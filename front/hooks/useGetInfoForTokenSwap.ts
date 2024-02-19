@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import useAmmControllerContract from "./useAmmControllerContract";
+import { toast } from "react-toastify";
 
 export interface SwapDetailType {
   userBalanceInStable: number;
@@ -46,8 +47,8 @@ const useGetInfoForTokenSwap = () => {
           poolStableReserve: Number(poolStableReserve),
           poolTokenReserve: Number(poolTokenReserve),
         };
-      } catch (e) {
-        throw e;
+      } catch (e: any) {
+        toast.error(e.message);
       } finally {
         setIsLoading(false);
       }

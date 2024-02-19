@@ -9,6 +9,7 @@ import { ErrorDecoder } from "ethers-decode-error";
 import "react-loading-skeleton/dist/skeleton.css";
 import { useRouter } from "next/navigation";
 import useRegistration from "@/hooks/useRegistration";
+import { toast } from "react-toastify";
 
 interface RegistrationProps {
   onUserCreated: (data: AccountType) => void;
@@ -23,7 +24,7 @@ const errorDecoder = ErrorDecoder.create([ammControllerContractAbi]);
 
 const Registration = ({ onUserCreated }: RegistrationProps) => {
   const router = useRouter();
-  const { register, isLoading } = useRegistration();
+  const { register, isLoading, isRegisterSuccess } = useRegistration();
   const [username, setUsername] = useState<string>("");
   const [wallet, setWallet] = useState<WalletState | undefined>(undefined);
   const [copiedKey, setCopiedKey] = useState<boolean>(false);
@@ -42,16 +43,8 @@ const Registration = ({ onUserCreated }: RegistrationProps) => {
   const confirmUserCreation = useCallback(async () => {
     try {
       await register(wallet!, username);
-
-      onUserCreated({
-        address: wallet?.address,
-        privateKey: wallet?.privateKey,
-        username: username,
-      });
-
-      router.push("/");
     } catch (e) {
-      throw e;
+      toast.error("Error al crear usuario");
     }
   }, [wallet, username]);
 
@@ -66,9 +59,7 @@ const Registration = ({ onUserCreated }: RegistrationProps) => {
       });
     };
 
-    getNewWallet().catch((e: any) => {
-      console.log(e);
-    });
+    getNewWallet();
   }, []);
 
   useEffect(() => {
@@ -78,6 +69,18 @@ const Registration = ({ onUserCreated }: RegistrationProps) => {
       }, 300);
     }
   }, [copiedKey]);
+
+  useEffect(() => {
+    if (isRegisterSuccess) {
+      onUserCreated({
+        address: wallet?.address,
+        privateKey: wallet?.privateKey,
+        username: username,
+      });
+
+      router.push("/");
+    }
+  }, [isLoading]);
 
   return (
     <div className="w-full md:w-1/3 lg:w-1/4 min-h-72 flex flex-col justify-center">

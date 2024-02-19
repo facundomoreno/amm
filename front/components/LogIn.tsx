@@ -4,6 +4,7 @@ import { ethers } from "ethers";
 import { AccountType } from "@/context/AuthContext";
 import useCheckIfAddressIsRegistered from "@/hooks/useGetUserByAddress";
 import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
 interface LogInProps {
   onUserLogged: (data: AccountType) => void;
@@ -30,10 +31,10 @@ const LogIn = ({ onUserLogged, onRegisterClicked }: LogInProps) => {
 
         router.push("/");
       } else {
-        throw new Error("Usuario no registrado");
+        toast.error("Usuario no registrado");
       }
-    } catch (e) {
-      throw e;
+    } catch (e: any) {
+      toast.error("Error de formato en el código ingresado");
     }
   }, [privateKey]);
   return (

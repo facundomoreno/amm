@@ -11,7 +11,7 @@ import useGetInfoForTokenSwap, {
 } from "@/hooks/useGetInfoForTokenSwap";
 import { AuthContext } from "@/context/AuthContext";
 import useSwapTokens from "@/hooks/useSwapTokens";
-import SuccessAlert from "./SuccessAlert";
+import { toast } from "react-toastify";
 
 interface SwapModalProps {
   isModalOpen: boolean;
@@ -212,6 +212,9 @@ const SwapModal = ({
 
   useEffect(() => {
     if (swapSucceded && !isSwapLoading) {
+      toast.success("Intercambio realizado con éxito", {
+        autoClose: TIME_FOR_TOAST,
+      });
       setTimeout(function () {
         window.location.reload();
       }, TIME_FOR_TOAST);
@@ -406,11 +409,6 @@ const SwapModal = ({
           </button>
         </div>
       </Modal>
-      <SuccessAlert
-        message="Intercambio completado con éxito"
-        showAlert={swapSucceded}
-        miliSeconds={TIME_FOR_TOAST}
-      />
     </>
   );
 };

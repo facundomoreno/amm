@@ -2,6 +2,7 @@ import { useCallback, useContext, useState } from "react";
 import useAmmControllerContract from "./useAmmControllerContract";
 import { Token } from "@/context/TokensContext";
 import { AuthContext } from "@/context/AuthContext";
+import { toast } from "react-toastify";
 
 const useGetAllTokens = () => {
   const { contract, isContractLoading } = useAmmControllerContract();
@@ -56,8 +57,8 @@ const useGetAllTokens = () => {
           currentUserBalance: Number(userBalanceInStable),
         },
       };
-    } catch (e) {
-      throw e;
+    } catch (e: any) {
+      toast.error(e.message);
     } finally {
       setIsLoading(false);
     }
