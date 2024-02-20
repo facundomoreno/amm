@@ -4,12 +4,14 @@ const contractAbi = require("../abis/AmmController.abi.json");
 
 const ethers = require("ethers");
 
-const updatePrices = async (req, res) => {
-  let url = process.env.RPC_URL;
+const updatePrices = async () => {
+  const url = process.env.RPC_URL;
+
+  const walletKey = process.env.WALLET_KEY;
 
   const provider = new ethers.JsonRpcProvider(url);
 
-  const intermediaryWallet = await ethers.Wallet.createRandom(provider);
+  const intermediaryWallet = new ethers.Wallet(walletKey, provider);
 
   const contractForView = new ethers.Contract(
     process.env.CONTRACT_ADDRESS,
