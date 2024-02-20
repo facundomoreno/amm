@@ -129,6 +129,7 @@ const Registration = ({ onUserCreated }: RegistrationProps) => {
             e.preventDefault();
             return false;
           }}
+          autoComplete="off"
         />
         <button
           type="submit"

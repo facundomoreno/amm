@@ -164,7 +164,7 @@ export default function HomePage() {
   };
 
   useEffect(() => {
-    if (!isContractLoading) {
+    if (!isContractLoading && authData.currentUser != null) {
       const fetchTokens = async () => {
         const tokensResponse = await getAllTokens();
 

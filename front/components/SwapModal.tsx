@@ -119,6 +119,12 @@ const SwapModal = ({
     return options;
   };
 
+  const checkSpecialChar = (e: any) => {
+    if (!/[0-9]/.test(e.key) && e.key != "Backspace") {
+      e.preventDefault();
+    }
+  };
+
   const handleAmountGivenChanged = (pretendedValue: number) => {
     let expectedAmountReceived =
       swapType == SwapType.BUYING_TOKEN
@@ -304,6 +310,14 @@ const SwapModal = ({
                           : inputsValues.fromInput
                       }
                       className="appearance-none border-opacity-0 rounded w-full pr-4 mt-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                      onKeyDown={(e) => checkSpecialChar(e)}
+                      onKeyUpCapture={(e) => checkSpecialChar(e)}
+                      onKeyDownCapture={(e) => checkSpecialChar(e)}
+                      onPaste={(e: any) => {
+                        e.preventDefault();
+                        return false;
+                      }}
+                      autoComplete="off"
                     />
                     {isExcedingFromAmountAvailable() && (
                       <p className="text-red-500 text-xs">
@@ -356,6 +370,14 @@ const SwapModal = ({
                         inputsValues.toInput == 0 ? "" : inputsValues.toInput
                       }
                       className="appearance-none border-opacity-0 rounded w-full pr-4 mt-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                      onKeyDown={(e) => checkSpecialChar(e)}
+                      onKeyUpCapture={(e) => checkSpecialChar(e)}
+                      onKeyDownCapture={(e) => checkSpecialChar(e)}
+                      onPaste={(e: any) => {
+                        e.preventDefault();
+                        return false;
+                      }}
+                      autoComplete="off"
                     />
                   </div>
                   <div className="flex items-center justify-center">
