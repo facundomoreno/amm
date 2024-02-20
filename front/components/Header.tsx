@@ -8,7 +8,7 @@ interface HeaderProps {
 
 const Header = ({ username, address, onLogoutClicked }: HeaderProps) => {
   return (
-    <div className="w-full justify-between flex items-center">
+    <div className="w-full justify-between flex items-center lg:px-32">
       {address && (
         <>
           <div className="flex items-center">

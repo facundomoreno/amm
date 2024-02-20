@@ -19,18 +19,6 @@ const HistoricValuesChart = ({
   options,
   series,
 }: HistoricValuesChartProps) => {
-  // const options = {
-  //   curveType: "function",
-  //   legend: { position: "bottom", alignment: "center" },
-  //   chartArea: { width: "100%", height: onlyLines ? "100%" : "40%" },
-  //   vAxis: {
-  //     baselineColor: "transparent",
-  //     gridlines: {
-  //       interval: 0,
-  //     },
-  //   },
-  // };
-
   return (
     <Chart
       chartType="LineChart"

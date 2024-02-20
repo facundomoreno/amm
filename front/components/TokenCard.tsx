@@ -31,7 +31,7 @@ const TokenCard = ({
   onSellTokenClicked,
 }: TokenCardProps) => {
   return (
-    <div className=" p-6 mt-4 border-2 border-gray-200 rounded shadow-xs">
+    <div className=" p-6 mt-4 border-2 border-gray-200 lg:border-gray-300 rounded shadow-xs lg:shadow-md">
       <div className="flex items-center justify-between">
         <div className="flex items-center">
           <div

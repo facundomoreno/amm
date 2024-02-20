@@ -19,11 +19,11 @@ export default function Auth() {
         {({ currentUser, changeCurrentUser }) => (
           <>
             {currentUser == null && (
-              <div className="min-h-screen p-16">
-                <h1 className="text-4xl font-sans">
+              <div className="min-h-screen p-4 lg:p-16">
+                <h1 className="text-2xl lg:text-4xl font-sans">
                   Bienvenido a mutantes tokens market!
                 </h1>
-                <div className="flex items-center justify-center mt-56">
+                <div className="flex items-center justify-center mt-14 lg:mt-56">
                   {userLocation == AUTH_COMPONENTS.LOG_IN ? (
                     <LogIn
                       onUserLogged={(data: AccountType) =>

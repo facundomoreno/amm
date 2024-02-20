@@ -2,6 +2,7 @@
 import HistoricValuesChart from "@/components/HistoricValuesChart";
 import SwapModal, { SwapType } from "@/components/SwapModal";
 import SwapTokensButton from "@/components/SwapTokensButton";
+import Tabs, { TabOption } from "@/components/Tabs";
 import TokenList from "@/components/TokenList";
 import TokensDistributionChart from "@/components/TokensDistributionChart";
 import TotalStableDisplay from "@/components/TotalStableDisplay";
@@ -14,8 +15,7 @@ import {
 import useGetAllTokens from "@/hooks/useGetAllTokens";
 import useGetHistoricalValues from "@/hooks/useGetHistoricalValues";
 import defineTokenColor from "@/utils/defineTokenColor";
-import { useContext, useEffect, useRef, useState } from "react";
-import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
+import { useContext, useEffect, useState } from "react";
 import "react-tabs/style/react-tabs.css";
 
 const historicValuesChartStyleOptions = {
@@ -30,7 +30,6 @@ const historicValuesChartStyleOptions = {
 };
 
 export default function HomePage() {
-  const bottomOfPageRef = useRef(null);
   const authData = useContext(AuthContext);
 
   const { getAllTokens, isTokensReqLoading, isContractLoading } =
@@ -54,6 +53,10 @@ export default function HomePage() {
 
   const [chartSeries, setChartSeries] = useState<any>({});
   const [chartSlices, setChartSlices] = useState<any>({});
+
+  const [currentTab, setCurrentTab] = useState<TabOption>(
+    TabOption.TOKENS_LIST
+  );
 
   const generatePieChartData = (tokens: Token[]) => {
     const data: any = [["Token", "Amount holded"]];
@@ -143,101 +146,91 @@ export default function HomePage() {
         historicalValues &&
         !isExternalRequestLoading && (
           <TokensContext.Provider value={appERC20s}>
-            <main>
-              <div>
-                <TotalStableDisplay />
+            <div className="lg:px-32">
+              <TotalStableDisplay />
 
-                <div className="border-2 border-gray-200 rounded shadow-xs mt-8 p-4">
-                  <HistoricValuesChart
-                    data={historicalValues}
-                    height={200}
-                    options={historicValuesChartStyleOptions}
-                    series={chartSeries}
-                  />
-                  <div className="flex justify-center mt-4">
-                    <div className="grid grid-cols-3 gap-4">
-                      {appERC20s.tokens.map((item, key) => (
-                        <div className="flex items-center" key={key}>
-                          <input
-                            type="checkbox"
-                            style={{
-                              accentColor: defineTokenColor(key),
-                              outline: `1px auto ${defineTokenColor(key)}`,
-                            }}
-                            onChange={(e) =>
-                              handleTokenChangedInChartView(
-                                item.address!,
-                                key,
-                                e.target.checked
-                              )
-                            }
-                            checked={tokensInChartView.includes(item.address!)}
-                          />
-                          <p className="pl-2">{item.name}</p>
-                        </div>
-                      ))}
-                    </div>
+              <div className="border-2 border-gray-200 lg:border-gray-300 rounded shadow-xs lg:shadow-sm mt-8 p-4">
+                <HistoricValuesChart
+                  data={historicalValues}
+                  height={200}
+                  options={historicValuesChartStyleOptions}
+                  series={chartSeries}
+                />
+                <div className="flex justify-center mt-4">
+                  <div className="grid grid-cols-3 gap-4">
+                    {appERC20s.tokens.map((item, key) => (
+                      <div className="flex items-center" key={key}>
+                        <input
+                          type="checkbox"
+                          style={{
+                            accentColor: defineTokenColor(key),
+                            outline: `1px auto ${defineTokenColor(key)}`,
+                          }}
+                          onChange={(e) =>
+                            handleTokenChangedInChartView(
+                              item.address!,
+                              key,
+                              e.target.checked
+                            )
+                          }
+                          checked={tokensInChartView.includes(item.address!)}
+                        />
+                        <p className="pl-2">{item.name}</p>
+                      </div>
+                    ))}
                   </div>
                 </div>
-
-                <div className="flex flex-col items-center justify-center mt-8 cursor-pointer">
-                  <SwapTokensButton
+                <div className="flex flex-col items-end mt-4">
+                  <div
+                    className="flex items-center cursor-pointer bg-black p-2 lg:p-4 rounded"
                     onClick={handleSwapTokensButtonClicked}
-                    size={8}
-                  />
-                  <p className="text-xs mt-4">INTERCAMBIAR TOKENS</p>
+                  >
+                    <SwapTokensButton onClick={() => {}} size={2} />
+                    <p className="lg:text-sm text-white pl-2">
+                      Comprar / vender
+                    </p>
+                  </div>
                 </div>
-
-                <Tabs className="mt-12">
-                  <TabList>
-                    <Tab>Todos los tokens</Tab>
-                    <Tab
-                      onClick={() => {
-                        // @ts-ignore
-                        bottomOfPageRef.current.scrollIntoView({
-                          behavior: "smooth",
-                        });
-                      }}
-                    >
-                      Tu balance
-                    </Tab>
-                  </TabList>
-
-                  <TabPanel>
-                    <div className="mt-8">
-                      <TokenList
-                        onBuyTokenClicked={(address: string) =>
-                          handleBuyOrSellTokenClicked(
-                            address,
-                            SwapType.BUYING_TOKEN
-                          )
-                        }
-                        onSellTokenClicked={(address: string) =>
-                          handleBuyOrSellTokenClicked(
-                            address,
-                            SwapType.SELLING_TOKEN
-                          )
-                        }
-                      />
-                    </div>
-                  </TabPanel>
-                  <TabPanel>
-                    <div className="w-22 mt-8">
-                      <TokensDistributionChart
-                        data={tokensDataForPieChart}
-                        chartSlices={chartSlices}
-                      />
-                    </div>
-                  </TabPanel>
-                </Tabs>
               </div>
-              <SwapModal
-                isModalOpen={isSwapModalOpen}
-                onCloseClicked={handleSwapModalClosed}
-                swapPreData={swapModalPreData}
-              />
-              <div ref={bottomOfPageRef} />
-            </main>
+
+              <div className="mt-8 lg:mt-12">
+                <Tabs
+                  onTabChanged={(tab: TabOption) => setCurrentTab(tab)}
+                  selectedTab={currentTab}
+                />
+
+                {currentTab == TabOption.TOKENS_LIST ? (
+                  <div className="mt-4">
+                    <TokenList
+                      onBuyTokenClicked={(address: string) =>
+                        handleBuyOrSellTokenClicked(
+                          address,
+                          SwapType.BUYING_TOKEN
+                        )
+                      }
+                      onSellTokenClicked={(address: string) =>
+                        handleBuyOrSellTokenClicked(
+                          address,
+                          SwapType.SELLING_TOKEN
+                        )
+                      }
+                    />
+                  </div>
+                ) : (
+                  <div className="w-22 mt-8 min-h-96">
+                    <TokensDistributionChart
+                      data={tokensDataForPieChart}
+                      chartSlices={chartSlices}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+            <SwapModal
+              isModalOpen={isSwapModalOpen}
+              onCloseClicked={handleSwapModalClosed}
+              swapPreData={swapModalPreData}
+            />
           </TokensContext.Provider>
         )}
     </>

@@ -17,8 +17,8 @@ const TotalStableDisplay = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center">
-      <h1 className="font-bold mt-12">{`TU TOTAL: ${calculateTotalBalanceInStable()} $MUT`}</h1>
+    <div className="flex flex-col items-center mt-12">
+      <h1 className="font-bold">{`TU TOTAL: ${calculateTotalBalanceInStable()} $MUT`}</h1>
       <p className="text-gray-400 mt-1">{`En mano: ${stableCurrency?.currentUserBalance} $MUT`}</p>
     </div>
   );
