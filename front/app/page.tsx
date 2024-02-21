@@ -36,10 +36,10 @@ export default function HomePage() {
 
   const { getAllTokens, isTokensReqLoading, isContractLoading } =
     useGetAllTokens();
-  const { historicalValues, isExternalRequestLoading } =
+  const { historicalValues, maxHistoryValue, isExternalRequestLoading } =
     useGetHistoricalValues();
 
-  const { swapHistory, setOffset, isSwapHistoryRequestLoading } =
+  const { swapHistory, pageCount, setOffset, isSwapHistoryRequestLoading } =
     useGetSwapHistory();
 
   const [appERC20s, setAppERC20s] = useState<TokensContextType | undefined>(
@@ -133,6 +133,11 @@ export default function HomePage() {
     setOffset(page.selected);
   };
 
+  const handleTabChanged = (tabOption: TabOption) => {
+    setCurrentTab(tabOption);
+    setOffset(0);
+  };
+
   useEffect(() => {
     if (!isContractLoading && authData.currentUser != null) {
       const fetchTokens = async () => {
@@ -164,7 +169,13 @@ export default function HomePage() {
                 <HistoricValuesChart
                   data={historicalValues}
                   height={200}
-                  options={historicValuesChartStyleOptions}
+                  options={{
+                    ...historicValuesChartStyleOptions,
+                    vAxis: {
+                      ...historicValuesChartStyleOptions.vAxis,
+                      viewWindow: { min: 990, max: maxHistoryValue + 10 },
+                    },
+                  }}
                   series={chartSeries}
                 />
                 <div className="flex justify-center mt-4 lg:mt-8">
@@ -209,7 +220,7 @@ export default function HomePage() {
 
               <div className="mt-8 lg:mt-16">
                 <Tabs
-                  onTabChanged={(tab: TabOption) => setCurrentTab(tab)}
+                  onTabChanged={handleTabChanged}
                   selectedTab={currentTab}
                 />
 
@@ -239,7 +250,7 @@ export default function HomePage() {
                     <SwapHistoryList
                       swapHistory={swapHistory}
                       onPageChange={handlePageChanged}
-                      pageCount={20}
+                      pageCount={pageCount}
                     />
                   </div>
                 )}

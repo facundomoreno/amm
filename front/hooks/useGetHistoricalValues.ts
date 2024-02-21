@@ -6,8 +6,11 @@ interface HistoricalValuesData {
 }
 
 interface ApiResponseType {
-  tokensData: { address: string; name: string; tag: string; price: number }[];
-  date: Date;
+  historicalPrices: {
+    tokensData: { address: string; name: string; tag: string; price: number }[];
+    date: Date;
+  }[];
+  maxValue: number;
 }
 
 const API_URI = process.env.NEXT_PUBLIC_HISTORICAL_PRICES_API_URI;
@@ -16,12 +19,13 @@ const useGetHistoricalValues = () => {
   const [historicalValues, setHistoricalValues] = useState<
     HistoricalValuesData | undefined
   >(undefined);
+  const [maxHistoryValue, setMaxValue] = useState<number>(0);
   const [isExternalRequestLoading, setIsLoading] = useState<boolean>(true);
 
-  const generateDataForChart = (data: ApiResponseType[]): any => {
+  const generateDataForChart = (data: ApiResponseType): any => {
     const dataForChart = [["Date"]];
 
-    data.map((item, key) => {
+    data.historicalPrices.map((item, key) => {
       if (dataForChart[0].length == 1) {
         item.tokensData.map((token, key) => {
           dataForChart[0].push(token.name);
@@ -39,7 +43,7 @@ const useGetHistoricalValues = () => {
 
   useEffect(() => {
     const fetchHistoricalValues = async () => {
-      const response: AxiosResponse<ApiResponseType[]> = await axios({
+      const response: AxiosResponse<ApiResponseType> = await axios({
         url: `${API_URI}/api/get-prices`,
         method: "GET",
         headers: {
@@ -51,6 +55,7 @@ const useGetHistoricalValues = () => {
       const finalData = generateDataForChart(response.data);
 
       setHistoricalValues(finalData);
+      setMaxValue(response.data.maxValue);
     };
 
     fetchHistoricalValues().finally(() => {
@@ -58,7 +63,7 @@ const useGetHistoricalValues = () => {
     });
   }, []);
 
-  return { historicalValues, isExternalRequestLoading };
+  return { historicalValues, maxHistoryValue, isExternalRequestLoading };
 };
 
 export default useGetHistoricalValues;

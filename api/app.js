@@ -39,6 +39,7 @@ app.get("/historical-prices", function (req, res) {
 
 app.listen(port, function () {
   console.log("App running in port: " + port);
+  updatePrices();
   setInterval(async () => {
     try {
       await updatePrices();
