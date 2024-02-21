@@ -31,7 +31,7 @@ const TokenCard = ({
   onSellTokenClicked,
 }: TokenCardProps) => {
   return (
-    <div className=" p-6 mt-4 border-2 border-gray-200 lg:border-gray-300 rounded shadow-xs lg:shadow-md">
+    <div className=" p-6 mt-4 bg-white border-2 border-gray-200 lg:border-gray-300 rounded shadow-xs lg:shadow-md">
       <div className="flex items-center justify-between">
         <div className="flex items-center">
           <div
@@ -61,11 +61,11 @@ const TokenCard = ({
       <p className="text-sm font-bold mt-4">Tenes:</p>
       <p className="text-sm">{`${token.currentUserBalance} $${token.tag}`}</p>
 
-      <div className="flex items-center mt-4">
+      <div className="flex items-center mt-4 lg:mt-6">
         <div className="flex-1 pr-2">
           <button
             onClick={() => onBuyTokenClicked(token.address)}
-            className="flex w-full items-center justify-center py-1 px-4 border-2 border-transparent bg-black text-white text-xs font-bold rounded"
+            className="flex w-full items-center justify-center py-1 lg:py-2 px-4 border-2 border-transparent bg-black text-white text-xs font-bold rounded hover:bg-gray-800"
           >
             Comprar
           </button>
@@ -73,7 +73,7 @@ const TokenCard = ({
         <div className="flex-1 pl-2">
           <button
             onClick={() => onSellTokenClicked(token.address)}
-            className="flex w-full items-center justify-center py-1 px-4 border-2 border-black  text-xs font-bold rounded"
+            className="flex w-full items-center justify-center py-1 lg:py-2 px-4 border-2 border-black  text-xs font-bold rounded hover:bg-gray-200"
           >
             Vender
           </button>

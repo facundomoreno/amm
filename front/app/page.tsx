@@ -149,19 +149,20 @@ export default function HomePage() {
             <div className="lg:px-32">
               <TotalStableDisplay />
 
-              <div className="border-2 border-gray-200 lg:border-gray-300 rounded shadow-xs lg:shadow-sm mt-8 p-4">
+              <div className="bg-white border-2 border-gray-200 lg:border-gray-300 rounded shadow-xs lg:shadow-lg mt-8 lg:mt-12 py-6 lg:py-8 px-4">
                 <HistoricValuesChart
                   data={historicalValues}
                   height={200}
                   options={historicValuesChartStyleOptions}
                   series={chartSeries}
                 />
-                <div className="flex justify-center mt-4">
-                  <div className="grid grid-cols-3 gap-4">
+                <div className="flex justify-center mt-4 lg:mt-8">
+                  <div className="grid grid-cols-3 gap-4 lg:gap-8">
                     {appERC20s.tokens.map((item, key) => (
                       <div className="flex items-center" key={key}>
                         <input
                           type="checkbox"
+                          className="cursor-pointer"
                           style={{
                             accentColor: defineTokenColor(key),
                             outline: `1px auto ${defineTokenColor(key)}`,
@@ -175,25 +176,27 @@ export default function HomePage() {
                           }
                           checked={tokensInChartView.includes(item.address!)}
                         />
-                        <p className="pl-2">{item.name}</p>
+                        <p className="pl-2 text-xs md:text-lg lg:text-lg">
+                          {item.name}
+                        </p>
                       </div>
                     ))}
                   </div>
                 </div>
                 <div className="flex flex-col items-end mt-4">
                   <div
-                    className="flex items-center cursor-pointer bg-black p-2 lg:p-4 rounded"
+                    className="flex items-center cursor-pointer bg-black p-2 lg:px-6 lg:py-4 rounded mt-4 lg:mt-0 hover:bg-gray-800"
                     onClick={handleSwapTokensButtonClicked}
                   >
                     <SwapTokensButton onClick={() => {}} size={2} />
-                    <p className="lg:text-sm text-white pl-2">
+                    <p className="text-xs lg:text-sm text-white pl-2 ">
                       Comprar / vender
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-8 lg:mt-12">
+              <div className="mt-8 lg:mt-16">
                 <Tabs
                   onTabChanged={(tab: TabOption) => setCurrentTab(tab)}
                   selectedTab={currentTab}

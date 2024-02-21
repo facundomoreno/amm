@@ -8,7 +8,7 @@ interface HeaderProps {
 
 const Header = ({ username, address, onLogoutClicked }: HeaderProps) => {
   return (
-    <div className="w-full justify-between flex items-center lg:px-32">
+    <div className="w-full justify-between flex items-center lg:px-32 lg:pt-6">
       {address && (
         <>
           <div className="flex items-center">
@@ -17,7 +17,7 @@ const Header = ({ username, address, onLogoutClicked }: HeaderProps) => {
           </div>
           <button
             onClick={onLogoutClicked}
-            className="ml-4 flex items-center justify-center py-1 px-4 border-2 border-black text-black text-xs hover:bg-red-700 font-bold rounded"
+            className="ml-4 flex items-center justify-center py-1 lg:py-2 px-4 lg:px-6 border-2 border-black text-black text-xs lg:text-sm hover:bg-gray-100 font-bold rounded"
           >
             Log out
           </button>
