@@ -6,9 +6,11 @@ import { Contract, ethers } from "ethers";
 import { ErrorDecoder } from "ethers-decode-error";
 import decodeEthersError from "@/utils/decodeEthersError";
 import { toast } from "react-toastify";
+import axios from "axios";
 
 const GAS_SPONSOR_KEY = process.env.NEXT_PUBLIC_GAS_SPONSOR_KEY;
 const RPC_URL = process.env.NEXT_PUBLIC_RPC_NODE;
+const API_URI = process.env.NEXT_PUBLIC_HISTORICAL_PRICES_API_URI;
 
 const useSwapTokens = () => {
   const { contract } = useAmmControllerContract();
@@ -21,7 +23,8 @@ const useSwapTokens = () => {
     async (
       fromTokenAddress: string,
       toTokenAddress: string,
-      amountIn: number
+      amountIn: number,
+      amountReceived: number
     ) => {
       if (!contract) return;
 
@@ -159,6 +162,23 @@ const useSwapTokens = () => {
             }
           }
         }
+
+        await axios({
+          url: `${API_URI}/api/new-swap`,
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          data: {
+            traderAddress: signer.address,
+            tokenFrom: fromTokenAddress,
+            tokenTo: toTokenAddress,
+            amountGiven: amountIn,
+            amountReceived: amountReceived,
+            date: new Date(),
+          },
+        });
 
         setSwapSucceded(true);
       } catch (e: any) {

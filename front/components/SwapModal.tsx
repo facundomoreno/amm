@@ -200,7 +200,12 @@ const SwapModal = ({
           swapType == SwapType.BUYING_TOKEN
             ? tokenAddressSelected
             : stableCurrency?.address;
-        await swap(fromAddress!, toAddress!, inputsValues.fromInput);
+        await swap(
+          fromAddress!,
+          toAddress!,
+          inputsValues.fromInput,
+          inputsValues.toInput
+        );
       }
     };
 

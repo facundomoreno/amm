@@ -1,5 +1,6 @@
 "use client";
 import HistoricValuesChart from "@/components/HistoricValuesChart";
+import SwapHistoryList from "@/components/SwapHistoryList";
 import SwapModal, { SwapType } from "@/components/SwapModal";
 import SwapTokensButton from "@/components/SwapTokensButton";
 import Tabs, { TabOption } from "@/components/Tabs";
@@ -14,6 +15,7 @@ import {
 } from "@/context/TokensContext";
 import useGetAllTokens from "@/hooks/useGetAllTokens";
 import useGetHistoricalValues from "@/hooks/useGetHistoricalValues";
+import useGetSwapHistory from "@/hooks/useGetSwapHistory";
 import defineTokenColor from "@/utils/defineTokenColor";
 import { useContext, useEffect, useState } from "react";
 import "react-tabs/style/react-tabs.css";
@@ -36,6 +38,9 @@ export default function HomePage() {
     useGetAllTokens();
   const { historicalValues, isExternalRequestLoading } =
     useGetHistoricalValues();
+
+  const { swapHistory, setOffset, isSwapHistoryRequestLoading } =
+    useGetSwapHistory();
 
   const [appERC20s, setAppERC20s] = useState<TokensContextType | undefined>(
     undefined
@@ -124,6 +129,10 @@ export default function HomePage() {
     setIsSwapModalOpen(true);
   };
 
+  const handlePageChanged = (page: { selected: number }) => {
+    setOffset(page.selected);
+  };
+
   useEffect(() => {
     if (!isContractLoading && authData.currentUser != null) {
       const fetchTokens = async () => {
@@ -144,7 +153,9 @@ export default function HomePage() {
       {authData.currentUser != null &&
         appERC20s &&
         historicalValues &&
-        !isExternalRequestLoading && (
+        !isExternalRequestLoading &&
+        swapHistory &&
+        !isSwapHistoryRequestLoading && (
           <TokensContext.Provider value={appERC20s}>
             <div className="lg:px-32">
               <TotalStableDisplay />
@@ -224,6 +235,11 @@ export default function HomePage() {
                     <TokensDistributionChart
                       data={tokensDataForPieChart}
                       chartSlices={chartSlices}
+                    />
+                    <SwapHistoryList
+                      swapHistory={swapHistory}
+                      onPageChange={handlePageChanged}
+                      pageCount={20}
                     />
                   </div>
                 )}

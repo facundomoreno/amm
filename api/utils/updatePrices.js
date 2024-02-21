@@ -1,4 +1,4 @@
-const HistoricalDataModel = require("../models/model");
+const HistoricalDataModel = require("../models/HistoricalDataModel");
 
 const contractAbi = require("../abis/AmmController.abi.json");
 
