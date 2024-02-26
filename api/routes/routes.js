@@ -1,9 +1,13 @@
 const express = require("express");
 
 const router = express.Router();
-const updatePrices = require("../utils/updatePrices");
 const HistoricalDataModel = require("../models/HistoricalDataModel");
 const SwapData = require("../models/SwapData");
+const { updatePrices, getAllTokens } = require("../utils/ethersFunctions");
+const {
+  getAggregationForSortType,
+  getMonthDiff,
+} = require("../utils/aggregateObjects");
 
 router.post("/new-swap", async (req, res) => {
   const data = new SwapData({
@@ -39,17 +43,95 @@ router.post("/get-user-swaps/:address", async (req, res) => {
   }
 });
 
-router.get("/get-prices", async (req, res) => {
+router.get("/get-prices/:sortType", async (req, res) => {
   try {
-    const data = await HistoricalDataModel.find().sort({ date: "asc" });
-    const resultOfMaxQuery = await HistoricalDataModel.find({
-      "tokensData.price": { $ne: null },
-    }) // Avoid null prices (optional)
-      .sort({ "tokensData.price": -1 }) // Sort in descending order based on price
-      .limit(1);
+    const sortType = req.params.sortType;
+    const today = new Date();
+    let initialDate = null;
+
+    const tokensList = await getAllTokens();
+
+    switch (req.params.sortType) {
+      case "ONE_DAY":
+        initialDate = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate() - 1
+        );
+        break;
+      case "FIVE_DAYS":
+        initialDate = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate() - 5
+        );
+        break;
+      case "ONE_MONTH":
+        initialDate = new Date(
+          today.getFullYear(),
+          today.getMonth() - 1,
+          today.getDate()
+        );
+        break;
+      case "SIX_MONTHS":
+        initialDate = new Date(
+          today.getFullYear(),
+          today.getMonth() - 6,
+          today.getDate()
+        );
+        break;
+      case "THIS_YEAR":
+        initialDate = new Date(new Date().getFullYear(), 0, 1);
+        break;
+      case "ONE_YEAR":
+        initialDate = new Date(
+          today.getFullYear() - 1,
+          today.getMonth(),
+          today.getDate()
+        );
+        break;
+      case "MAX":
+        initialDate = null;
+        break;
+    }
+
+    const firstRecordedObject = await HistoricalDataModel.find().limit(1);
+    const firstRecordedDate =
+      firstRecordedObject.length > 0 ? firstRecordedObject[0].date : null;
+
+    const aggObject = getAggregationForSortType(
+      sortType,
+      tokensList,
+      initialDate,
+      firstRecordedDate
+    );
+
+    const data = await HistoricalDataModel.aggregate(aggObject);
+
+    let lastEntries;
+    if (getMonthDiff(initialDate ?? firstRecordedDate, new Date()) >= 8) {
+      lastEntries = await HistoricalDataModel.find()
+        .sort({ date: -1 })
+        .limit(1);
+    } else {
+      lastEntries = [];
+    }
+
+    const historicalPricesData = [...data, ...lastEntries.reverse()];
+
+    let maxPrice = 0;
+
+    for (var i = 0; i < historicalPricesData.length; i++) {
+      for (var z = 0; z < historicalPricesData[i].tokensData.length; z++) {
+        if (historicalPricesData[i].tokensData[z].price > maxPrice) {
+          maxPrice = historicalPricesData[i].tokensData[z].price;
+        }
+      }
+    }
+
     res.json({
-      historicalPrices: data,
-      maxValue: resultOfMaxQuery[0].tokensData[0].price,
+      historicalPrices: historicalPricesData,
+      maxValue: maxPrice,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

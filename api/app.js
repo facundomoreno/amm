@@ -2,7 +2,7 @@ var express = require("express");
 const routes = require("./routes/routes");
 const cors = require("cors");
 const mongoose = require("mongoose");
-const updatePrices = require("./utils/updatePrices");
+const { updatePrices } = require("./utils/ethersFunctions");
 require("dotenv").config();
 
 var app = express();
@@ -25,13 +25,6 @@ database.once("connected", () => {
 app.use(express.json());
 
 app.use("/api", routes);
-
-// app.use(function (req, res, next) {
-//   res.setHeader("Access-Control-Allow-Origin", "*");
-//   res.setHeader("Access-Control-Allow-Methods", "POST, GET, PUT");
-//   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-//   next();
-// });
 
 app.get("/historical-prices", function (req, res) {
   res.send("Hello World!");

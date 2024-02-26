@@ -35,7 +35,7 @@ const SwapHistoryCard = ({ swapData }: SwapHistoryCardProps) => {
   );
 
   return (
-    <div className="px-4 py-1 flex items-center bg-white border-2 border-gray-200 lg:border-gray-300 rounded shadow-xs lg:shadow-md">
+    <div className="px-6 py-1 flex items-center bg-white border-2 border-gray-200 lg:border-gray-300 rounded shadow-xs lg:shadow-md">
       <div className="flex-1 grow-[12]">
         {swapType == SwapType.BUYING_TOKEN ? (
           <p className="text-xs">

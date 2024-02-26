@@ -14,13 +14,18 @@ import {
   TokensContextType,
 } from "@/context/TokensContext";
 import useGetAllTokens from "@/hooks/useGetAllTokens";
-import useGetHistoricalValues from "@/hooks/useGetHistoricalValues";
+import useGetHistoricalValues, {
+  DateRanges,
+} from "@/hooks/useGetHistoricalValues";
 import useGetSwapHistory from "@/hooks/useGetSwapHistory";
 import defineTokenColor from "@/utils/defineTokenColor";
 import { useContext, useEffect, useState } from "react";
+import { GoogleChartOptions, GoogleChartTicks } from "react-google-charts";
+import Select from "react-select";
 import "react-tabs/style/react-tabs.css";
 
-const historicValuesChartStyleOptions = {
+const historicValuesChartStyleOptions: any = {
+  backgroundColor: "white",
   curveType: "function",
   chartArea: { width: "70%" },
   legend: { position: "none" },
@@ -29,15 +34,32 @@ const historicValuesChartStyleOptions = {
     viewWindowMode: "explicit",
     viewWindow: { min: 950, max: 1400 },
   },
+  hAxis: {
+    type: "log",
+  },
 };
+
+const dateRangeOptions = [
+  { value: DateRanges.ONE_DAY, label: "1 día" },
+  { value: DateRanges.FIVE_DAYS, label: "5 días" },
+  { value: DateRanges.ONE_MONTH, label: "1 mes" },
+  { value: DateRanges.SIX_MONTHS, label: "6 meses" },
+  { value: DateRanges.THIS_YEAR, label: "Este año" },
+  { value: DateRanges.LAST_YEAR, label: "1 año" },
+  { value: DateRanges.MAX, label: "Todo" },
+];
 
 export default function HomePage() {
   const authData = useContext(AuthContext);
 
   const { getAllTokens, isTokensReqLoading, isContractLoading } =
     useGetAllTokens();
-  const { historicalValues, maxHistoryValue, isExternalRequestLoading } =
-    useGetHistoricalValues();
+  const {
+    historicalValues,
+    maxHistoryValue,
+    isExternalRequestLoading,
+    setSortType,
+  } = useGetHistoricalValues();
 
   const { swapHistory, pageCount, setOffset, isSwapHistoryRequestLoading } =
     useGetSwapHistory();
@@ -165,7 +187,18 @@ export default function HomePage() {
             <div className="lg:px-32">
               <TotalStableDisplay />
 
-              <div className="bg-white border-2 border-gray-200 lg:border-gray-300 rounded shadow-xs lg:shadow-lg mt-8 lg:mt-12 py-6 lg:py-8 px-4">
+              <div className="bg-white border-2 border-gray-200 lg:border-gray-300 rounded shadow-xs lg:shadow-lg mt-8 lg:mt-12 py-6 lg:py-8 px-4 lg:px-8">
+                <p className="text-xs text-gray-500">Vista de gráfico</p>
+                <div className="w-40">
+                  <Select
+                    className="mt-2"
+                    options={dateRangeOptions}
+                    defaultValue={dateRangeOptions[0]}
+                    onChange={(option: any) => setSortType(option?.value)}
+                    menuPortalTarget={document.body}
+                  />
+                </div>
+
                 <HistoricValuesChart
                   data={historicalValues}
                   height={200}
@@ -247,11 +280,13 @@ export default function HomePage() {
                       data={tokensDataForPieChart}
                       chartSlices={chartSlices}
                     />
-                    <SwapHistoryList
-                      swapHistory={swapHistory}
-                      onPageChange={handlePageChanged}
-                      pageCount={pageCount}
-                    />
+                    {swapHistory.length > 0 && (
+                      <SwapHistoryList
+                        swapHistory={swapHistory}
+                        onPageChange={handlePageChanged}
+                        pageCount={pageCount}
+                      />
+                    )}
                   </div>
                 )}
               </div>

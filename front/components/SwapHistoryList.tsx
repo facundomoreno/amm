@@ -17,12 +17,12 @@ const SwapHistoryList = ({
   return (
     <>
       <p className="font-bold text-sm mt-4">Historial de intercambios:</p>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-8 mt-4">
+      <div className="grid grid-cols-1 gap-4 md:w-96 lg:w-96 mt-4 lg:mt-6">
         {swapHistory.map((item, key) => (
           <SwapHistoryCard key={key} swapData={item} />
         ))}
       </div>
-      <div className="mt-4">
+      <div className="mt-4 lg:mt-8">
         <ReactPaginate
           breakLabel="..."
           nextLabel=">"

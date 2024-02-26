@@ -13,6 +13,15 @@ interface ApiResponseType {
   maxValue: number;
 }
 
+export enum DateRanges {
+  ONE_DAY = "ONE_DAY",
+  FIVE_DAYS = "FIVE_DAYS",
+  ONE_MONTH = "ONE_MONTH",
+  SIX_MONTHS = "SIX_MONTHS",
+  THIS_YEAR = "THIS_YEAR",
+  LAST_YEAR = "ONE_YEAR",
+  MAX = "MAX",
+}
 const API_URI = process.env.NEXT_PUBLIC_HISTORICAL_PRICES_API_URI;
 
 const useGetHistoricalValues = () => {
@@ -21,6 +30,7 @@ const useGetHistoricalValues = () => {
   >(undefined);
   const [maxHistoryValue, setMaxValue] = useState<number>(0);
   const [isExternalRequestLoading, setIsLoading] = useState<boolean>(true);
+  const [sortType, setSortType] = useState<DateRanges>(DateRanges.ONE_DAY);
 
   const generateDataForChart = (data: ApiResponseType): any => {
     const dataForChart = [["Date"]];
@@ -31,7 +41,7 @@ const useGetHistoricalValues = () => {
           dataForChart[0].push(token.name);
         });
       }
-      const dateChartItem: any = [item.date.toString()];
+      const dateChartItem: any = [new Date(item.date)];
       item.tokensData.map((token, key) => {
         dateChartItem.push(token.price);
       });
@@ -44,7 +54,7 @@ const useGetHistoricalValues = () => {
   useEffect(() => {
     const fetchHistoricalValues = async () => {
       const response: AxiosResponse<ApiResponseType> = await axios({
-        url: `${API_URI}/api/get-prices`,
+        url: `${API_URI}/api/get-prices/${sortType}`,
         method: "GET",
         headers: {
           Accept: "application/json",
@@ -61,9 +71,14 @@ const useGetHistoricalValues = () => {
     fetchHistoricalValues().finally(() => {
       setIsLoading(false);
     });
-  }, []);
+  }, [sortType]);
 
-  return { historicalValues, maxHistoryValue, isExternalRequestLoading };
+  return {
+    historicalValues,
+    setSortType,
+    maxHistoryValue,
+    isExternalRequestLoading,
+  };
 };
 
 export default useGetHistoricalValues;

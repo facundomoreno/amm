@@ -52,4 +52,30 @@ const updatePrices = async () => {
   await newEntry.save();
 };
 
-module.exports = updatePrices;
+const getAllTokens = async () => {
+  const url = process.env.RPC_URL;
+
+  const walletKey = process.env.WALLET_KEY;
+
+  const provider = new ethers.JsonRpcProvider(url);
+
+  const intermediaryWallet = new ethers.Wallet(walletKey, provider);
+
+  const contractForView = new ethers.Contract(
+    process.env.CONTRACT_ADDRESS,
+    contractAbi,
+    intermediaryWallet
+  );
+
+  const tokensResFromEthers = await contractForView.getAllTokens();
+
+  const tokensAddresses = [];
+
+  tokensResFromEthers.map((item) => {
+    tokensAddresses.push(item[0]);
+  });
+
+  return tokensAddresses;
+};
+
+module.exports = { updatePrices, getAllTokens };

@@ -26,6 +26,7 @@ const HistoricValuesChart = ({
       height={`${height}px`}
       data={data}
       options={{ ...options, series }}
+      columns={[{ type: "date" }]}
     />
   );
 };
