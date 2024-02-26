@@ -32,7 +32,7 @@ const updatePrices = async () => {
       );
 
       const marketValue = Math.ceil(
-        Math.abs(Number(poolStableReserve) / (1 - Number(poolTokenReserve)))
+        Math.abs(Number(poolStableReserve) / Number(poolTokenReserve))
       );
 
       return {

@@ -13,6 +13,7 @@ export default function Auth() {
   const [userLocation, setUserLocation] = useState<AUTH_COMPONENTS>(
     AUTH_COMPONENTS.LOG_IN
   );
+
   return (
     <>
       <AuthContext.Consumer>
@@ -21,7 +22,7 @@ export default function Auth() {
             {currentUser == null && (
               <div className="min-h-screen p-4 lg:p-16">
                 <h1 className="text-2xl lg:text-4xl font-sans">
-                  Bienvenido a mutantes tokens market!
+                  Autenticación
                 </h1>
                 <div className="flex items-center justify-center mt-14 lg:mt-56">
                   {userLocation == AUTH_COMPONENTS.LOG_IN ? (
@@ -37,6 +38,9 @@ export default function Auth() {
                     <Registration
                       onUserCreated={(data: AccountType) =>
                         changeCurrentUser(data)
+                      }
+                      onLoginClicked={() =>
+                        setUserLocation(AUTH_COMPONENTS.LOG_IN)
                       }
                     />
                   )}

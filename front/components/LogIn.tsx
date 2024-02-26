@@ -39,7 +39,7 @@ const LogIn = ({ onUserLogged, onRegisterClicked }: LogInProps) => {
   }, [privateKey]);
   return (
     <div className="w-full md:w-1/3 lg:w-1/4 min-h-72 flex flex-col justify-center">
-      <div className=" p-8 border-2 border-gray-200 rounded shadow-md">
+      <div className=" p-8 border-2 border-gray-300 rounded shadow-md">
         <p>Ya tenés una cuenta?</p>
         <input
           className="shadow appearance-none border rounded w-full py-2 px-3 mt-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"

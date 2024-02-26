@@ -17,9 +17,8 @@ const TokenList = ({
 }: TokenListProps) => {
   const { tokens, stableCurrency } = useContext(TokensContext);
 
-  const { historicalValues, isExternalRequestLoading } = useGetHistoricalValues(
-    DateRanges.FIVE_DAYS
-  );
+  const { historicalValues, isExternalRequestLoading, maxHistoryValue } =
+    useGetHistoricalValues(DateRanges.FIVE_DAYS);
 
   const getHistoricalPricesForObject = (key: number) => {
     if (historicalValues) {
@@ -41,6 +40,7 @@ const TokenList = ({
             <TokenCard
               token={item}
               historicPrices={getHistoricalPricesForObject(key)}
+              maxHistoryValue={maxHistoryValue}
               stableCurrency={stableCurrency!}
               color={defineTokenColor(key)}
               key={key}

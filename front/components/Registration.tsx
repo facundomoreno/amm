@@ -13,6 +13,7 @@ import { toast } from "react-toastify";
 
 interface RegistrationProps {
   onUserCreated: (data: AccountType) => void;
+  onLoginClicked: () => void;
 }
 
 export interface WalletState {
@@ -22,7 +23,7 @@ export interface WalletState {
 
 const errorDecoder = ErrorDecoder.create([ammControllerContractAbi]);
 
-const Registration = ({ onUserCreated }: RegistrationProps) => {
+const Registration = ({ onUserCreated, onLoginClicked }: RegistrationProps) => {
   const router = useRouter();
   const { register, isLoading, isRegisterSuccess } = useRegistration();
   const [username, setUsername] = useState<string>("");
@@ -84,7 +85,7 @@ const Registration = ({ onUserCreated }: RegistrationProps) => {
 
   return (
     <div className="w-full md:w-1/3 lg:w-1/4 min-h-72 flex flex-col justify-center">
-      <div className=" p-8 border-2 border-gray-200 rounded shadow-md">
+      <div className=" p-8 border-2 border-gray-300 rounded shadow-md">
         <p className="">Address de la wallet:</p>
         {wallet ? (
           <p className="font-bold break-all">{wallet.address}</p>
@@ -141,6 +142,12 @@ const Registration = ({ onUserCreated }: RegistrationProps) => {
           {!isLoading ? <p>Confirmar</p> : <p>Loading...</p>}
         </button>
       </div>
+      <p
+        onClick={() => onLoginClicked()}
+        className="text-right mt-4 cursor-pointer"
+      >
+        Log in
+      </p>
     </div>
   );
 };

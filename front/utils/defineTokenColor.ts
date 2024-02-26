@@ -1,25 +1,19 @@
 const defineTokenColor = (tokenIndex: number) => {
   const colors = [
-    "#dc2626", // red
-    "#ea580c", // orange
-    "#d97706", // amber
-    "#65a30d", // lime
-    "#60a5fa", // green
-    "#059669", // emerald
-    "#06b6d4", // cyan
-    "#2563eb", // blue
-    "#4f46e5", // violet
-    "#d946ef", // pink
-    "#991b1b", // deep red
-    "#eb9b9b", // deep blue
+    "#dc2626",
+    "#d97706",
+    "#2563eb",
+    "#60a5fa",
+    "#059669",
+    "#06b6d4",
+    "#65a30d",
+    "#4f46e5",
+    "#d946ef",
+    "#991b1b",
+    "#eb9b9b",
   ];
 
-  const i =
-    tokenIndex % 2 == 0 || tokenIndex == 0
-      ? tokenIndex
-      : colors.length - tokenIndex;
-
-  return colors[i];
+  return colors[tokenIndex];
 };
 
 export default defineTokenColor;

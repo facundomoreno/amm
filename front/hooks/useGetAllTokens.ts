@@ -36,7 +36,7 @@ const useGetAllTokens = () => {
           const poolTokenReserve = await contract.getPoolTokenReserve(item[0]);
 
           const marketValue = Math.ceil(
-            Math.abs(Number(poolStableReserve) / (1 - Number(poolTokenReserve)))
+            Math.abs(Number(poolStableReserve) / Number(poolTokenReserve))
           );
           tokens.push({
             address: item[0],

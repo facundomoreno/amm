@@ -4,6 +4,7 @@ import HistoricValuesChart from "./HistoricValuesChart";
 export interface TokenCardProps {
   token: Token;
   historicPrices: any;
+  maxHistoryValue: number;
   color: string;
   stableCurrency: Token;
   onBuyTokenClicked: (address: string) => void;
@@ -25,6 +26,7 @@ const chartStyleOptions = {
 const TokenCard = ({
   token,
   historicPrices,
+  maxHistoryValue,
   color,
   stableCurrency,
   onBuyTokenClicked,
@@ -46,7 +48,13 @@ const TokenCard = ({
             onlyLines
             height={50}
             width={60}
-            options={chartStyleOptions}
+            options={{
+              ...chartStyleOptions,
+              vAxis: {
+                ...chartStyleOptions.vAxis,
+                viewWindow: { min: 990, max: maxHistoryValue + 10 },
+              },
+            }}
             series={{ 0: { color } }}
           />
         </div>
