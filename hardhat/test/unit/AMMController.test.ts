@@ -341,8 +341,6 @@ const {
           assert.equal(Number(userBalanceInStableBefore), 0);
           assert.isAbove(Number(userBalanceInTokenBefore), 0);
 
-          console.log("BALANCE IN TOKEN BEFORE", userBalanceInTokenBefore);
-
           await tokenContract
             .connect(trader)
             .approve(ammControllerContract.target, userBalanceInTokenBefore);
@@ -358,7 +356,6 @@ const {
           const userBalanceInStableAfter =
             await stableCurrencyContract.balanceOf(trader.address);
 
-          console.log("BALANCE IN STABLE AFTER", userBalanceInStableAfter);
           const userBalanceInTokenAfter = await tokenContract.balanceOf(
             trader.address
           );
@@ -383,8 +380,6 @@ const {
 
           const priceOfTokenBefore =
             Number(poolStableReserve) / Number(poolTokenReserve);
-
-          console.log("PRICE before", priceOfTokenBefore);
 
           assert.equal(
             priceOfTokenBefore,
@@ -418,8 +413,6 @@ const {
 
           const priceOfTokenAfter =
             Number(poolStableReserveAfter) / Number(poolTokenReserveAfter);
-
-          console.log("PRICE after", priceOfTokenAfter);
 
           assert.isAbove(priceOfTokenAfter, priceOfTokenBefore);
 

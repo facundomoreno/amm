@@ -24,13 +24,15 @@ export enum DateRanges {
 }
 const API_URI = process.env.NEXT_PUBLIC_HISTORICAL_PRICES_API_URI;
 
-const useGetHistoricalValues = () => {
+const useGetHistoricalValues = (defaultSortType?: DateRanges) => {
   const [historicalValues, setHistoricalValues] = useState<
-    HistoricalValuesData | undefined
+    HistoricalValuesData[] | undefined
   >(undefined);
   const [maxHistoryValue, setMaxValue] = useState<number>(0);
   const [isExternalRequestLoading, setIsLoading] = useState<boolean>(true);
-  const [sortType, setSortType] = useState<DateRanges>(DateRanges.ONE_DAY);
+  const [sortType, setSortType] = useState<DateRanges>(
+    defaultSortType ?? DateRanges.ONE_DAY
+  );
 
   const generateDataForChart = (data: ApiResponseType): any => {
     const dataForChart = [["Date"]];
@@ -52,6 +54,7 @@ const useGetHistoricalValues = () => {
   };
 
   useEffect(() => {
+    setIsLoading(true);
     const fetchHistoricalValues = async () => {
       const response: AxiosResponse<ApiResponseType> = await axios({
         url: `${API_URI}/api/get-prices/${sortType}`,

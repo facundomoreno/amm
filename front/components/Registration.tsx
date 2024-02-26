@@ -80,7 +80,7 @@ const Registration = ({ onUserCreated }: RegistrationProps) => {
 
       router.push("/");
     }
-  }, [isLoading]);
+  }, [isLoading, isRegisterSuccess]);
 
   return (
     <div className="w-full md:w-1/3 lg:w-1/4 min-h-72 flex flex-col justify-center">

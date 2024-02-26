@@ -4,7 +4,6 @@ pragma solidity ^0.8.20;
 import "./Token.sol";
 import "./Pool.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "../node_modules/hardhat/console.sol";
 
 error AMMController_UserAlreadyRegistered();
 error AMMController_UsernameLengthOf35Exceded();

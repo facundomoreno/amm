@@ -2,7 +2,6 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "../node_modules/hardhat/console.sol";
 
 error Pool_OnlyOwnerCanCallThisFunction();
 error Pool_ReceivedDifferentValueThanNecessaryForSwap();

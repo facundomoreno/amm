@@ -3,7 +3,6 @@ import useAmmControllerContract from "./useAmmControllerContract";
 import { AuthContext } from "@/context/AuthContext";
 import ERC20abi from "../abis/ERC20.abi.json";
 import { Contract, ethers } from "ethers";
-import { ErrorDecoder } from "ethers-decode-error";
 import decodeEthersError from "@/utils/decodeEthersError";
 import { toast } from "react-toastify";
 import axios from "axios";
