@@ -3,7 +3,9 @@ const routes = require("./routes/routes");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const { updatePrices } = require("./utils/ethersFunctions");
-require("dotenv").config();
+const dotenv = require("dotenv");
+
+dotenv.config();
 
 var app = express();
 app.use(cors());
