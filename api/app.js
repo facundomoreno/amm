@@ -9,7 +9,7 @@ dotenv.config();
 
 var app = express();
 app.use(cors());
-var port = process.env.SERVER_PORT;
+var port = process.env.PORT;
 const mongoString = process.env.DATABASE_URL;
 const minutesBetweenUpdates = process.env.MINUTES_BETWEEN_UPDATES;
 
