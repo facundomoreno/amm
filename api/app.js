@@ -27,7 +27,7 @@ mongoose.connect(mongoString).then(() => {
   database.on("error", (error) => {
     console.log(error);
   });
-  app.listen(port, function () {
+  app.listen(port, "0.0.0.0", function () {
     console.log("App running in port: " + port);
     updatePrices();
     setInterval(async () => {
