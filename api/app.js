@@ -15,11 +15,11 @@ const minutesBetweenUpdates = process.env.MINUTES_BETWEEN_UPDATES;
 
 app.use(express.json());
 
-app.use("/api", routes);
-
-app.get("/historical-prices", function (req, res) {
+app.get("/", function (req, res) {
   res.send("Hello World!");
 });
+
+app.use("/api", routes);
 
 mongoose.connect(mongoString).then(() => {
   const database = mongoose.connection;
