@@ -1,9 +1,10 @@
 import { Contract, Wallet, ethers } from "ethers";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import ammControllerContractAbi from "../abis/AmmController.abi.json";
 
 const contractAddress = process.env.NEXT_PUBLIC_AMM_CONTROLLER_CONTRACT;
+const RPC_NODE_URL = process.env.NEXT_PUBLIC_RCP_NODE;
 
 const useAmmControllerContract = (forcedWallet?: Wallet) => {
   const { currentUser } = useContext(AuthContext);
@@ -12,7 +13,7 @@ const useAmmControllerContract = (forcedWallet?: Wallet) => {
 
   useEffect(() => {
     const generateContractForPublicViews = async () => {
-      let url = "http://127.0.0.1:8545/";
+      let url = RPC_NODE_URL;
 
       const provider = new ethers.JsonRpcProvider(url);
 
@@ -27,7 +28,7 @@ const useAmmControllerContract = (forcedWallet?: Wallet) => {
     };
 
     const generateContractWithUser = () => {
-      let url = "http://127.0.0.1:8545/";
+      let url = RPC_NODE_URL;
 
       const provider = new ethers.JsonRpcProvider(url);
 
