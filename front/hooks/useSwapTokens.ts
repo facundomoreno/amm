@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 import axios from "axios";
 
 const GAS_SPONSOR_KEY = process.env.NEXT_PUBLIC_GAS_SPONSOR_KEY;
-const RPC_URL = process.env.NEXT_PUBLIC_RPC_NODE;
+const RPC_NODE_URL = process.env.NEXT_PUBLIC_RPC_NODE;
 const API_URI = process.env.NEXT_PUBLIC_HISTORICAL_PRICES_API_URI;
 
 const useSwapTokens = () => {
@@ -30,9 +30,7 @@ const useSwapTokens = () => {
       setIsLoading(true);
 
       try {
-        let url = RPC_URL;
-
-        const provider = new ethers.JsonRpcProvider(url);
+        const provider = new ethers.JsonRpcProvider(RPC_NODE_URL);
 
         const gasSponsorWallet = new ethers.Wallet(GAS_SPONSOR_KEY!, provider);
 
@@ -62,8 +60,13 @@ const useSwapTokens = () => {
         let approvalSuccess = false;
         let approvalRetries = 0;
         let approvalSponsorMuliplier = 0.1;
+        let forceApprovalToFinish = false;
 
-        while (!approvalSuccess && approvalRetries <= 8) {
+        while (
+          !approvalSuccess &&
+          approvalRetries <= 8 &&
+          !forceApprovalToFinish
+        ) {
           approvalRetries += 1;
           try {
             await gasSponsorWallet.sendTransaction({
@@ -81,20 +84,20 @@ const useSwapTokens = () => {
 
             approvalSuccess = true;
           } catch (e: any) {
-            let forceTxToFinish = false;
             if (typeof e.message != undefined) {
               if (
                 !e.message.includes(
                   "sender doesn't have enough funds to send tx"
-                )
+                ) &&
+                !e.message.includes("insufficient funds")
               ) {
-                forceTxToFinish = true;
+                forceApprovalToFinish = true;
               }
             } else {
-              forceTxToFinish = true;
+              forceApprovalToFinish = true;
             }
 
-            if (approvalRetries == 8 || forceTxToFinish) {
+            if (approvalRetries == 8 || forceApprovalToFinish) {
               toast.error("Error en el swap de tokens");
             }
           }
@@ -121,8 +124,9 @@ const useSwapTokens = () => {
         let tradeSuccess = false;
         let tradeRetries = 0;
         let tradeSponsorMultiplier = 0.1;
+        let forceTradeToFinish = false;
 
-        while (!tradeSuccess && tradeRetries <= 8) {
+        while (!tradeSuccess && tradeRetries <= 8 && !forceTradeToFinish) {
           tradeRetries += 1;
           try {
             await gasSponsorWallet.sendTransaction({
@@ -143,20 +147,20 @@ const useSwapTokens = () => {
 
             tradeSuccess = true;
           } catch (e: any) {
-            let forceTxToFinish = false;
             if (typeof e.message != undefined) {
               if (
                 !e.message.includes(
                   "sender doesn't have enough funds to send tx"
-                )
+                ) &&
+                !e.message.includes("insufficient funds")
               ) {
-                forceTxToFinish = true;
+                forceTradeToFinish = true;
               }
             } else {
-              forceTxToFinish = true;
+              forceTradeToFinish = true;
             }
 
-            if (tradeRetries == 8 || forceTxToFinish) {
+            if (tradeRetries == 8 || forceTradeToFinish) {
               toast.error("Error en el swap de tokens");
             }
           }

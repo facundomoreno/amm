@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import useAmmControllerContract from "./useAmmControllerContract";
-import { ethers, BaseWallet } from "ethers";
+import { ethers } from "ethers";
 import { WalletState } from "@/components/Registration";
 import { toast } from "react-toastify";
 import decodeEthersError from "@/utils/decodeEthersError";
@@ -21,9 +21,7 @@ const useRegistration = () => {
       setIsLoading(true);
 
       try {
-        let url = RPC_URL;
-
-        const provider = new ethers.JsonRpcProvider(url);
+        const provider = new ethers.JsonRpcProvider(RPC_URL);
 
         const gasSponsorWallet = new ethers.Wallet(GAS_SPONSOR_KEY!, provider);
 
@@ -58,8 +56,9 @@ const useRegistration = () => {
           let success = false;
           let retries = 0;
           let ethSponsorMultiplier = 0.1;
+          let forceTxToFinish = false;
 
-          while (!success && retries <= 8) {
+          while (!success && retries <= 8 && !forceTxToFinish) {
             retries += 1;
             try {
               await gasSponsorWallet.sendTransaction({
@@ -80,12 +79,12 @@ const useRegistration = () => {
               success = true;
               setIsRegisterSuccess(true);
             } catch (e: any) {
-              let forceTxToFinish = false;
               if (typeof e.message != undefined) {
                 if (
                   !e.message.includes(
                     "sender doesn't have enough funds to send tx"
-                  )
+                  ) &&
+                  !e.message.includes("insufficient funds")
                 ) {
                   forceTxToFinish = true;
                 }

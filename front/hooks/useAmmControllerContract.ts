@@ -4,7 +4,7 @@ import { AuthContext } from "../context/AuthContext";
 import ammControllerContractAbi from "../abis/AmmController.abi.json";
 
 const contractAddress = process.env.NEXT_PUBLIC_AMM_CONTROLLER_CONTRACT;
-const RPC_NODE_URL = process.env.NEXT_PUBLIC_RCP_NODE;
+const RPC_NODE_URL = process.env.NEXT_PUBLIC_RPC_NODE;
 
 const useAmmControllerContract = (forcedWallet?: Wallet) => {
   const { currentUser } = useContext(AuthContext);
@@ -13,9 +13,7 @@ const useAmmControllerContract = (forcedWallet?: Wallet) => {
 
   useEffect(() => {
     const generateContractForPublicViews = async () => {
-      let url = RPC_NODE_URL;
-
-      const provider = new ethers.JsonRpcProvider(url);
+      const provider = new ethers.JsonRpcProvider(RPC_NODE_URL);
 
       const signerWallet = await ethers.Wallet.createRandom(provider);
 
@@ -28,9 +26,7 @@ const useAmmControllerContract = (forcedWallet?: Wallet) => {
     };
 
     const generateContractWithUser = () => {
-      let url = RPC_NODE_URL;
-
-      const provider = new ethers.JsonRpcProvider(url);
+      const provider = new ethers.JsonRpcProvider(RPC_NODE_URL);
 
       const signer = new ethers.Wallet(currentUser?.privateKey!, provider);
 

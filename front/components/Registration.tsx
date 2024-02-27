@@ -4,8 +4,6 @@ import CopyIcon from "@/public/CopyIcon";
 import { ethers } from "ethers";
 import Skeleton from "react-loading-skeleton";
 import { AccountType } from "@/context/AuthContext";
-import ammControllerContractAbi from "../abis/AmmController.abi.json";
-import { ErrorDecoder } from "ethers-decode-error";
 import "react-loading-skeleton/dist/skeleton.css";
 import { useRouter } from "next/navigation";
 import useRegistration from "@/hooks/useRegistration";
@@ -21,7 +19,7 @@ export interface WalletState {
   privateKey: string;
 }
 
-const RPC_NODE_URL = process.env.NEXT_PUBLIC_RCP_NODE;
+const RPC_NODE_URL = process.env.NEXT_PUBLIC_RPC_NODE;
 
 const Registration = ({ onUserCreated, onLoginClicked }: RegistrationProps) => {
   const router = useRouter();
@@ -51,8 +49,7 @@ const Registration = ({ onUserCreated, onLoginClicked }: RegistrationProps) => {
 
   useEffect(() => {
     const getNewWallet = async () => {
-      let url = RPC_NODE_URL;
-      const provider = new ethers.JsonRpcProvider(url);
+      const provider = new ethers.JsonRpcProvider(RPC_NODE_URL);
       const userWallet = await ethers.Wallet.createRandom(provider);
       setWallet({
         address: userWallet.address,

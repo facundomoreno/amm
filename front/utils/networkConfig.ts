@@ -1,7 +1,7 @@
-const RCP_URL = process.env.NEXT_PUBLIC_RCP_NODE;
+const RPC_URL = process.env.NEXT_PUBLIC_RPC_NODE;
 
 const networkConfig = {
-  rcpUrl: RCP_URL,
+  RPCUrl: RPC_URL,
 };
 
 export default networkConfig;
