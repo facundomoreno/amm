@@ -59,12 +59,12 @@ contract AMMController {
     mapping(address => address) private tokenToPool;
 
     constructor(
-        TokenCreationProps[] memory _tokens, // T = 11
-        TokenCreationProps memory _stableCurrency, // Supply = 253000
-        uint256 _initialSupplyForTokens, // #T = 20
-        uint256 _initialConversionRateFromTokenToStable, // C = 1000
-        uint256 _limitNumberOfUsers, // p = 11
-        uint256 _initialTokensForUsers // 3,
+        TokenCreationProps[] memory _tokens,
+        TokenCreationProps memory _stableCurrency,
+        uint256 _initialSupplyForTokens,
+        uint256 _initialConversionRateFromTokenToStable,
+        uint256 _limitNumberOfUsers,
+        uint256 _initialTokensForUsers
     ) {
         owner = msg.sender;
 

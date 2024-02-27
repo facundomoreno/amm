@@ -33,7 +33,6 @@ const historicValuesChartStyleOptions: any = {
   vAxis: {
     baselineColor: "transparent",
     viewWindowMode: "explicit",
-    viewWindow: { min: 950, max: 1400 },
   },
   hAxis: {
     type: "log",
@@ -58,6 +57,7 @@ export default function HomePage() {
   const {
     historicalValues,
     maxHistoryValue,
+    minHistoryValue,
     isExternalRequestLoading,
     setSortType,
   } = useGetHistoricalValues();
@@ -227,7 +227,10 @@ export default function HomePage() {
                   ...historicValuesChartStyleOptions,
                   vAxis: {
                     ...historicValuesChartStyleOptions.vAxis,
-                    viewWindow: { min: 990, max: maxHistoryValue + 10 },
+                    viewWindow: {
+                      min: minHistoryValue - 10,
+                      max: maxHistoryValue + 10,
+                    },
                   },
                 }}
                 series={chartSeries}

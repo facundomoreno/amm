@@ -7,17 +7,17 @@ const ammControllerConstructorArguments: {
   initialBuyOptionsOfTokensForUsers: number;
 } = {
   tokens: [
-    { name: "Facu", tag: "FAC" },
-    { name: "Polo", tag: "POL" },
+    { name: "Chocho", tag: "CH8" },
     { name: "Colo", tag: "COL" },
+    { name: "Facu", tag: "FAC" },
+    { name: "Ian", tag: "IAN" },
     { name: "Jotto", tag: "JOT" },
     { name: "Maxi", tag: "MAX" },
-    { name: "Wais", tag: "WSM" },
-    { name: "Roni", tag: "RON" },
-    { name: "Chocho", tag: "CH8" },
-    { name: "Ian", tag: "IAN" },
     { name: "Mastro", tag: "MST" },
     { name: "Palmo", tag: "PLM" },
+    { name: "Polo", tag: "POL" },
+    { name: "Roni", tag: "RON" },
+    { name: "Wais", tag: "WSM" },
   ],
   stableCurrency: { name: "Mutante Coin", tag: "MUT" },
   initialSupplyForTokens: 2000,

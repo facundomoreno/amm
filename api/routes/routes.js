@@ -120,11 +120,15 @@ router.get("/get-prices/:sortType", async (req, res) => {
     const historicalPricesData = [...data, ...lastEntries.reverse()];
 
     let maxPrice = 0;
+    let minPrice = historicalPricesData[0].tokensData[0].price;
 
     for (var i = 0; i < historicalPricesData.length; i++) {
       for (var z = 0; z < historicalPricesData[i].tokensData.length; z++) {
         if (historicalPricesData[i].tokensData[z].price > maxPrice) {
           maxPrice = historicalPricesData[i].tokensData[z].price;
+        }
+        if (historicalPricesData[i].tokensData[z].price < minPrice) {
+          minPrice = historicalPricesData[i].tokensData[z].price;
         }
       }
     }
@@ -132,6 +136,7 @@ router.get("/get-prices/:sortType", async (req, res) => {
     res.json({
       historicalPrices: historicalPricesData,
       maxValue: maxPrice,
+      minValue: minPrice,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

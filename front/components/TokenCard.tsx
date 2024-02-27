@@ -5,6 +5,7 @@ export interface TokenCardProps {
   token: Token;
   historicPrices: any;
   maxHistoryValue: number;
+  minHistoryValue: number;
   color: string;
   stableCurrency: Token;
   onBuyTokenClicked: (address: string) => void;
@@ -27,6 +28,7 @@ const TokenCard = ({
   token,
   historicPrices,
   maxHistoryValue,
+  minHistoryValue,
   color,
   stableCurrency,
   onBuyTokenClicked,
@@ -52,7 +54,10 @@ const TokenCard = ({
               ...chartStyleOptions,
               vAxis: {
                 ...chartStyleOptions.vAxis,
-                viewWindow: { min: 990, max: maxHistoryValue + 10 },
+                viewWindow: {
+                  min: minHistoryValue - 10,
+                  max: maxHistoryValue + 10,
+                },
               },
             }}
             series={{ 0: { color } }}

@@ -11,6 +11,7 @@ interface ApiResponseType {
     date: Date;
   }[];
   maxValue: number;
+  minValue: number;
 }
 
 export enum DateRanges {
@@ -29,6 +30,7 @@ const useGetHistoricalValues = (defaultSortType?: DateRanges) => {
     HistoricalValuesData[] | undefined
   >(undefined);
   const [maxHistoryValue, setMaxValue] = useState<number>(0);
+  const [minHistoryValue, setMinValue] = useState<number>(0);
   const [isExternalRequestLoading, setIsLoading] = useState<boolean>(true);
   const [sortType, setSortType] = useState<DateRanges>(
     defaultSortType ?? DateRanges.ONE_DAY
@@ -69,6 +71,7 @@ const useGetHistoricalValues = (defaultSortType?: DateRanges) => {
 
       setHistoricalValues(finalData);
       setMaxValue(response.data.maxValue);
+      setMinValue(response.data.minValue);
     };
 
     fetchHistoricalValues().finally(() => {
@@ -80,6 +83,7 @@ const useGetHistoricalValues = (defaultSortType?: DateRanges) => {
     historicalValues,
     setSortType,
     maxHistoryValue,
+    minHistoryValue,
     isExternalRequestLoading,
   };
 };
