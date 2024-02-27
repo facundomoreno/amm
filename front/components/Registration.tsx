@@ -21,7 +21,7 @@ export interface WalletState {
   privateKey: string;
 }
 
-const errorDecoder = ErrorDecoder.create([ammControllerContractAbi]);
+const RPC_NODE_URL = process.env.NEXT_PUBLIC_RCP_NODE;
 
 const Registration = ({ onUserCreated, onLoginClicked }: RegistrationProps) => {
   const router = useRouter();
@@ -51,7 +51,7 @@ const Registration = ({ onUserCreated, onLoginClicked }: RegistrationProps) => {
 
   useEffect(() => {
     const getNewWallet = async () => {
-      let url = "http://127.0.0.1:8545";
+      let url = RPC_NODE_URL;
       const provider = new ethers.JsonRpcProvider(url);
       const userWallet = await ethers.Wallet.createRandom(provider);
       setWallet({
