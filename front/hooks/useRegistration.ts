@@ -84,7 +84,8 @@ const useRegistration = () => {
                   !e.message.includes(
                     "sender doesn't have enough funds to send tx"
                   ) &&
-                  !e.message.includes("insufficient funds")
+                  !e.message.includes("insufficient funds") &&
+                  !e.message.includes("fee too low")
                 ) {
                   forceTxToFinish = true;
                 }
@@ -94,6 +95,7 @@ const useRegistration = () => {
 
               if (retries == 8 || forceTxToFinish) {
                 toast.error("Error en la creación de usuario");
+                throw e;
               }
             }
           }
@@ -108,6 +110,7 @@ const useRegistration = () => {
         } else {
           toast.error(e.message);
         }
+        throw e;
       } finally {
         setIsLoading(false);
       }

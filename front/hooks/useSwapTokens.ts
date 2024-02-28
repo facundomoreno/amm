@@ -59,7 +59,7 @@ const useSwapTokens = () => {
 
         let approvalSuccess = false;
         let approvalRetries = 0;
-        let approvalSponsorMuliplier = 0.1;
+        let approvalSponsorMuliplier = 0.3;
         let forceApprovalToFinish = false;
 
         while (
@@ -80,7 +80,12 @@ const useSwapTokens = () => {
             gasSponsorTxNonce += 1;
             approvalSponsorMuliplier *= 2;
 
-            await tokenContract.approve(contract.target, amountIn);
+            const approvalTx = await tokenContract
+              .connect(signer)
+              // @ts-ignore
+              .approve(contract.target, amountIn);
+
+            await approvalTx.wait();
 
             approvalSuccess = true;
           } catch (e: any) {
@@ -89,7 +94,8 @@ const useSwapTokens = () => {
                 !e.message.includes(
                   "sender doesn't have enough funds to send tx"
                 ) &&
-                !e.message.includes("insufficient funds")
+                !e.message.includes("insufficient funds") &&
+                !e.message.includes("fee too low")
               ) {
                 forceApprovalToFinish = true;
               }
@@ -99,6 +105,7 @@ const useSwapTokens = () => {
 
             if (approvalRetries == 8 || forceApprovalToFinish) {
               toast.error("Error en el swap de tokens");
+              throw e;
             }
           }
         }
@@ -138,11 +145,10 @@ const useSwapTokens = () => {
             gasSponsorTxNonce += 1;
             tradeSponsorMultiplier *= 2;
 
-            const tx = await contract.tradeTokens(
-              fromTokenAddress,
-              toTokenAddress,
-              amountIn
-            );
+            const tx = await contract
+              .connect(signer)
+              // @ts-ignore
+              .tradeTokens(fromTokenAddress, toTokenAddress, amountIn);
             await tx.wait();
 
             tradeSuccess = true;
@@ -152,7 +158,8 @@ const useSwapTokens = () => {
                 !e.message.includes(
                   "sender doesn't have enough funds to send tx"
                 ) &&
-                !e.message.includes("insufficient funds")
+                !e.message.includes("insufficient funds") &&
+                !e.message.includes("fee too low")
               ) {
                 forceTradeToFinish = true;
               }
@@ -162,6 +169,7 @@ const useSwapTokens = () => {
 
             if (tradeRetries == 8 || forceTradeToFinish) {
               toast.error("Error en el swap de tokens");
+              throw e;
             }
           }
         }
@@ -192,6 +200,7 @@ const useSwapTokens = () => {
         } else {
           toast.error(e.message);
         }
+        throw e;
       } finally {
         setIsLoading(false);
       }

@@ -1,7 +1,7 @@
 import { useCallback, useContext, useEffect, useState } from "react";
 import Modal from "react-modal";
 import Select from "react-select";
-import { ThreeDots } from "react-loader-spinner";
+import { Oval, ThreeDots } from "react-loader-spinner";
 import SwapTokensButton from "./SwapTokensButton";
 import { TokensContext } from "@/context/TokensContext";
 import defineTokenColor from "@/utils/defineTokenColor";
@@ -302,166 +302,193 @@ const SwapModal = ({
                 menuPortal: (base) => ({ ...base, zIndex: 9999 }),
               }}
             />
-            <div className="flex items-center justify-center mt-4">
-              <p>
-                {swapDetail != undefined
-                  ? `${
-                      swapType == SwapType.BUYING_TOKEN
-                        ? `${swapDetail.userBalanceInStable} $${stableCurrency?.tag}`
-                        : `${swapDetail.userBalanceInToken} $${
-                            tokens.find(
-                              (item) => item.address == tokenAddressSelected
-                            )?.tag
-                          }`
-                    } disponibles`
-                  : "-"}
-              </p>
-            </div>
-
-            <div className="min-h-44">
-              {tokenAddressSelected != undefined && swapDetail != undefined ? (
+            <div className="min-h-96">
+              {!isDetailLoading ? (
                 <>
-                  <div className="w-full flex justify-between px-4 py-2 mt-2 border-2 border-gray-200 bg-white rounded translate-y-2 z-0">
-                    <div>
-                      <p>Doy</p>
-                      <input
-                        type="number"
-                        placeholder="0"
-                        min={0}
-                        onChange={(e) =>
-                          handleAmountGivenChanged(e.target.valueAsNumber)
-                        }
-                        value={
-                          inputsValues.fromInput == 0
-                            ? ""
-                            : inputsValues.fromInput
-                        }
-                        className="appearance-none border-opacity-0 rounded w-full pr-4 mt-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                        onKeyDown={(e) => checkSpecialChar(e)}
-                        onKeyUpCapture={(e) => checkSpecialChar(e)}
-                        onKeyDownCapture={(e) => checkSpecialChar(e)}
-                        onPaste={(e: any) => {
-                          e.preventDefault();
-                          return false;
-                        }}
-                        autoComplete="off"
+                  <div className="flex items-center justify-center mt-4">
+                    <p>
+                      {swapDetail != undefined
+                        ? `${
+                            swapType == SwapType.BUYING_TOKEN
+                              ? `${swapDetail.userBalanceInStable} $${stableCurrency?.tag}`
+                              : `${swapDetail.userBalanceInToken} $${
+                                  tokens.find(
+                                    (item) =>
+                                      item.address == tokenAddressSelected
+                                  )?.tag
+                                }`
+                          } disponibles`
+                        : "-"}
+                    </p>
+                  </div>
+
+                  <div className="min-h-44">
+                    {tokenAddressSelected != undefined &&
+                    swapDetail != undefined ? (
+                      <>
+                        <div className="w-full flex justify-between px-4 py-2 mt-2 border-2 border-gray-200 bg-white rounded translate-y-2 z-0">
+                          <div>
+                            <p>Doy</p>
+                            <input
+                              type="number"
+                              placeholder="0"
+                              min={0}
+                              onChange={(e) =>
+                                handleAmountGivenChanged(e.target.valueAsNumber)
+                              }
+                              value={
+                                inputsValues.fromInput == 0
+                                  ? ""
+                                  : inputsValues.fromInput
+                              }
+                              className="appearance-none border-opacity-0 rounded w-full pr-4 mt-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                              onKeyDown={(e) => checkSpecialChar(e)}
+                              onKeyUpCapture={(e) => checkSpecialChar(e)}
+                              onKeyDownCapture={(e) => checkSpecialChar(e)}
+                              onPaste={(e: any) => {
+                                e.preventDefault();
+                                return false;
+                              }}
+                              autoComplete="off"
+                            />
+                            {isExcedingFromAmountAvailable() && (
+                              <p className="text-red-500 text-xs">
+                                Cantidad insuficiente
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex items-center justify-center">
+                            <div className="px-2 py-4 h-6 flex justify-between items-center border-2 border-gray-200 rounded">
+                              <div
+                                style={{
+                                  backgroundColor:
+                                    swapType == SwapType.SELLING_TOKEN
+                                      ? defineTokenColor(
+                                          tokens
+                                            .map((item) => item.address)
+                                            .indexOf(tokenAddressSelected)
+                                        )
+                                      : "black",
+                                }}
+                                className={`h-4 w-4 rounded-full`}
+                              />
+                              <p className="pl-2">
+                                {swapType == SwapType.SELLING_TOKEN
+                                  ? tokens.find(
+                                      (item) =>
+                                        item.address == tokenAddressSelected
+                                    )?.tag
+                                  : "MUT"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-center z-10 relative">
+                          <SwapTokensButton
+                            onClick={handleChangeOrderOfSwap}
+                            size={8}
+                            isModal
+                          />
+                        </div>
+                        <div className="w-full flex justify-between px-4 py-2 border-2 border-gray-200 bg-white rounded -translate-y-2 z-0">
+                          <div>
+                            <p>Recibo</p>
+                            <input
+                              type="number"
+                              placeholder="0"
+                              min={0}
+                              onChange={(e) =>
+                                handleAmountReceivedChanged(
+                                  e.target.valueAsNumber
+                                )
+                              }
+                              value={
+                                inputsValues.toInput == 0
+                                  ? ""
+                                  : inputsValues.toInput
+                              }
+                              className="appearance-none border-opacity-0 rounded w-full pr-4 mt-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                              onKeyDown={(e) => checkSpecialChar(e)}
+                              onKeyUpCapture={(e) => checkSpecialChar(e)}
+                              onKeyDownCapture={(e) => checkSpecialChar(e)}
+                              onPaste={(e: any) => {
+                                e.preventDefault();
+                                return false;
+                              }}
+                              autoComplete="off"
+                            />
+                          </div>
+                          <div className="flex items-center justify-center">
+                            <div className="px-2 py-4 h-6 flex justify-between items-center border-2 border-gray-200 rounded">
+                              <div
+                                style={{
+                                  backgroundColor:
+                                    swapType == SwapType.SELLING_TOKEN
+                                      ? "black"
+                                      : defineTokenColor(
+                                          tokens
+                                            .map((item) => item.address)
+                                            .indexOf(tokenAddressSelected)
+                                        ),
+                                }}
+                                className={`h-4 w-4 rounded-full`}
+                              />
+                              <p className="pl-2">
+                                {swapType == SwapType.SELLING_TOKEN
+                                  ? "MUT"
+                                  : tokens.find(
+                                      (item) =>
+                                        item.address == tokenAddressSelected
+                                    )?.tag}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <p>Seleccionar un token para realizar el swap</p>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={handleSwapTokens}
+                    disabled={
+                      isSwapLoading ||
+                      swapSucceded ||
+                      tokenAddressSelected == undefined ||
+                      inputsValues.fromInput == 0
+                    }
+                    className="flex items-center justify-center w-full px-0 sm:px-16 md:px-28 lg:px-32 py-4 mt-6 text-white font-bold rounded bg-black"
+                  >
+                    {!isSwapLoading && !swapSucceded ? (
+                      <p>Confirmar</p>
+                    ) : (
+                      <ThreeDots
+                        visible={true}
+                        height="30"
+                        width="30"
+                        color="white"
+                        radius="9"
+                        ariaLabel="three-dots-loading"
                       />
-                      {isExcedingFromAmountAvailable() && (
-                        <p className="text-red-500 text-xs">
-                          Cantidad insuficiente
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-center">
-                      <div className="px-2 py-4 h-6 flex justify-between items-center border-2 border-gray-200 rounded">
-                        <div
-                          style={{
-                            backgroundColor:
-                              swapType == SwapType.SELLING_TOKEN
-                                ? defineTokenColor(
-                                    tokens
-                                      .map((item) => item.address)
-                                      .indexOf(tokenAddressSelected)
-                                  )
-                                : "black",
-                          }}
-                          className={`h-4 w-4 rounded-full`}
-                        />
-                        <p className="pl-2">
-                          {swapType == SwapType.SELLING_TOKEN
-                            ? tokens.find(
-                                (item) => item.address == tokenAddressSelected
-                              )?.tag
-                            : "MUT"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-center z-10 relative">
-                    <SwapTokensButton
-                      onClick={handleChangeOrderOfSwap}
-                      size={8}
-                      isModal
-                    />
-                  </div>
-                  <div className="w-full flex justify-between px-4 py-2 border-2 border-gray-200 bg-white rounded -translate-y-2 z-0">
-                    <div>
-                      <p>Recibo</p>
-                      <input
-                        type="number"
-                        placeholder="0"
-                        min={0}
-                        onChange={(e) =>
-                          handleAmountReceivedChanged(e.target.valueAsNumber)
-                        }
-                        value={
-                          inputsValues.toInput == 0 ? "" : inputsValues.toInput
-                        }
-                        className="appearance-none border-opacity-0 rounded w-full pr-4 mt-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                        onKeyDown={(e) => checkSpecialChar(e)}
-                        onKeyUpCapture={(e) => checkSpecialChar(e)}
-                        onKeyDownCapture={(e) => checkSpecialChar(e)}
-                        onPaste={(e: any) => {
-                          e.preventDefault();
-                          return false;
-                        }}
-                        autoComplete="off"
-                      />
-                    </div>
-                    <div className="flex items-center justify-center">
-                      <div className="px-2 py-4 h-6 flex justify-between items-center border-2 border-gray-200 rounded">
-                        <div
-                          style={{
-                            backgroundColor:
-                              swapType == SwapType.SELLING_TOKEN
-                                ? "black"
-                                : defineTokenColor(
-                                    tokens
-                                      .map((item) => item.address)
-                                      .indexOf(tokenAddressSelected)
-                                  ),
-                          }}
-                          className={`h-4 w-4 rounded-full`}
-                        />
-                        <p className="pl-2">
-                          {swapType == SwapType.SELLING_TOKEN
-                            ? "MUT"
-                            : tokens.find(
-                                (item) => item.address == tokenAddressSelected
-                              )?.tag}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                    )}
+                  </button>
                 </>
               ) : (
-                <p>Seleccionar un token para realizar el swap</p>
+                <div className="flex items-center justify-center pt-32">
+                  <Oval
+                    visible={true}
+                    height="30"
+                    width="30"
+                    color="black"
+                    secondaryColor="black"
+                    ariaLabel="oval-loading"
+                    wrapperStyle={{}}
+                    wrapperClass=""
+                  />
+                </div>
               )}
             </div>
-
-            <button
-              onClick={handleSwapTokens}
-              disabled={
-                isSwapLoading ||
-                swapSucceded ||
-                tokenAddressSelected == undefined ||
-                inputsValues.fromInput == 0
-              }
-              className="flex items-center justify-center w-full px-0 sm:px-16 md:px-28 lg:px-32 py-4 mt-6 text-white font-bold rounded bg-black"
-            >
-              {!isSwapLoading && !swapSucceded ? (
-                <p>Confirmar</p>
-              ) : (
-                <ThreeDots
-                  visible={true}
-                  height="30"
-                  width="30"
-                  color="white"
-                  radius="9"
-                  ariaLabel="three-dots-loading"
-                />
-              )}
-            </button>
           </div>
         </div>
       </Modal>
