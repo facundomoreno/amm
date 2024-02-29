@@ -3,28 +3,24 @@ const express = require("express");
 const router = express.Router();
 const HistoricalDataModel = require("../models/HistoricalDataModel");
 const SwapData = require("../models/SwapData");
-const { updatePrices, getAllTokens } = require("../utils/ethersFunctions");
+const { getAllTokens, tradeTokens } = require("../utils/ethersFunctions");
 const {
   getAggregationForSortType,
   getMonthDiff,
 } = require("../utils/aggregateObjects");
 
-router.post("/new-swap", async (req, res) => {
-  const data = new SwapData({
-    traderAddress: req.body.traderAddress,
-    tokenFrom: req.body.tokenFrom,
-    tokenTo: req.body.tokenTo,
-    amountGiven: req.body.amountGiven,
-    amountReceived: req.body.amountReceived,
-    date: req.body.date,
-  });
-
+router.post("/trade-tokens", async (req, res) => {
   try {
-    const dataToSave = await data.save();
-    await updatePrices();
-    res.status(200).json(dataToSave);
+    const response = await tradeTokens(
+      req.body.traderKey,
+      req.body.fromTokenAddress,
+      req.body.toTokenAddress,
+      req.body.amountIn
+    );
+    res.status(200).json(response);
   } catch (e) {
-    res.status(400).json({ message: error.message });
+    console.log(e);
+    res.status(400).json({ message: e.message });
   }
 });
 

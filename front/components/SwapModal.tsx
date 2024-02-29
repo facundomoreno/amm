@@ -159,7 +159,7 @@ const SwapModal = ({
                 (pretendedValue - swapDetail?.poolTokenReserve!)
             )
           )
-        : Math.ceil(
+        : Math.floor(
             Math.abs(
               (pretendedValue * swapDetail?.poolTokenReserve!) /
                 (pretendedValue - swapDetail?.poolStableReserve!)
@@ -200,12 +200,7 @@ const SwapModal = ({
           swapType == SwapType.BUYING_TOKEN
             ? tokenAddressSelected
             : stableCurrency?.address;
-        await swap(
-          fromAddress!,
-          toAddress!,
-          inputsValues.fromInput,
-          inputsValues.toInput
-        );
+        await swap(fromAddress!, toAddress!, inputsValues.fromInput);
       }
     };
 
@@ -302,7 +297,7 @@ const SwapModal = ({
                 menuPortal: (base) => ({ ...base, zIndex: 9999 }),
               }}
             />
-            <div className="min-h-96">
+            <div className="min-h-72">
               {!isDetailLoading ? (
                 <>
                   <div className="flex items-center justify-center mt-4">

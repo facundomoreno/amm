@@ -5,6 +5,7 @@ import defineTokenColor from "@/utils/defineTokenColor";
 import useGetHistoricalValues, {
   DateRanges,
 } from "@/hooks/useGetHistoricalValues";
+import { Oval } from "react-loader-spinner";
 
 interface TokenListProps {
   onBuyTokenClicked: (address: string) => void;
@@ -38,7 +39,7 @@ const TokenList = ({
   };
   return (
     <>
-      {historicalValues && !isExternalRequestLoading && (
+      {historicalValues && !isExternalRequestLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-8">
           {tokens.map((item, key) => (
             <TokenCard
@@ -57,6 +58,19 @@ const TokenList = ({
               }
             />
           ))}
+        </div>
+      ) : (
+        <div className="flex items-center justify-center pt-18 min-h-40">
+          <Oval
+            visible={true}
+            height="40"
+            width="40"
+            color="black"
+            secondaryColor="black"
+            ariaLabel="oval-loading"
+            wrapperStyle={{}}
+            wrapperClass=""
+          />
         </div>
       )}
     </>

@@ -7,8 +7,6 @@ import decodeEthersError from "@/utils/decodeEthersError";
 import { toast } from "react-toastify";
 import axios from "axios";
 
-const GAS_SPONSOR_KEY = process.env.NEXT_PUBLIC_GAS_SPONSOR_KEY;
-const RPC_NODE_URL = process.env.NEXT_PUBLIC_RPC_NODE;
 const API_URI = process.env.NEXT_PUBLIC_HISTORICAL_PRICES_API_URI;
 
 const useSwapTokens = () => {
@@ -22,172 +20,25 @@ const useSwapTokens = () => {
     async (
       fromTokenAddress: string,
       toTokenAddress: string,
-      amountIn: number,
-      amountReceived: number
+      amountIn: number
     ) => {
       if (!contract) return;
 
       setIsLoading(true);
 
       try {
-        const provider = new ethers.JsonRpcProvider(RPC_NODE_URL);
-
-        const gasSponsorWallet = new ethers.Wallet(GAS_SPONSOR_KEY!, provider);
-
-        const signer = new ethers.Wallet(currentUser?.privateKey!, provider);
-
-        const tokenContract = new Contract(fromTokenAddress, ERC20abi, signer);
-
-        let gasSponsorTxNonce = await gasSponsorWallet.getNonce();
-
-        const gasPrice = (await provider.getFeeData()).gasPrice;
-
-        const gasFeeEstimationForAproval =
-          await tokenContract.approve.estimateGas(contract.target, amountIn); // @ts-ignore
-
-        const aproxEthToSponsorApproval =
-          Number(gasFeeEstimationForAproval) * Number(gasPrice);
-
-        await gasSponsorWallet.sendTransaction({
-          from: gasSponsorWallet.address,
-          to: signer.address,
-          value: aproxEthToSponsorApproval,
-          nonce: gasSponsorTxNonce,
-        });
-
-        gasSponsorTxNonce += 1;
-
-        let approvalSuccess = false;
-        let approvalRetries = 0;
-        let approvalSponsorMuliplier = 0.3;
-        let forceApprovalToFinish = false;
-
-        while (
-          !approvalSuccess &&
-          approvalRetries <= 8 &&
-          !forceApprovalToFinish
-        ) {
-          approvalRetries += 1;
-          try {
-            await gasSponsorWallet.sendTransaction({
-              from: gasSponsorWallet.address,
-              to: signer.address,
-              value: Math.ceil(
-                aproxEthToSponsorApproval * approvalSponsorMuliplier
-              ),
-              nonce: gasSponsorTxNonce,
-            });
-            gasSponsorTxNonce += 1;
-            approvalSponsorMuliplier *= 2;
-
-            const approvalTx = await tokenContract
-              .connect(signer)
-              // @ts-ignore
-              .approve(contract.target, amountIn);
-
-            await approvalTx.wait();
-
-            approvalSuccess = true;
-          } catch (e: any) {
-            if (typeof e.message != undefined) {
-              if (
-                !e.message.includes(
-                  "sender doesn't have enough funds to send tx"
-                ) &&
-                !e.message.includes("insufficient funds") &&
-                !e.message.includes("fee too low")
-              ) {
-                forceApprovalToFinish = true;
-              }
-            } else {
-              forceApprovalToFinish = true;
-            }
-
-            if (approvalRetries == 8 || forceApprovalToFinish) {
-              toast.error("Error en el swap de tokens");
-              throw e;
-            }
-          }
-        }
-
-        const gasFeeEstimationForTrade = await contract.tradeTokens.estimateGas(
-          fromTokenAddress,
-          toTokenAddress,
-          amountIn
-        );
-
-        const aproxEthToSponsorTrade =
-          Number(gasFeeEstimationForTrade) * Number(gasPrice);
-
-        await gasSponsorWallet.sendTransaction({
-          from: gasSponsorWallet.address,
-          to: signer.address,
-          value: aproxEthToSponsorTrade,
-          nonce: gasSponsorTxNonce,
-        });
-
-        gasSponsorTxNonce += 1;
-
-        let tradeSuccess = false;
-        let tradeRetries = 0;
-        let tradeSponsorMultiplier = 0.1;
-        let forceTradeToFinish = false;
-
-        while (!tradeSuccess && tradeRetries <= 8 && !forceTradeToFinish) {
-          tradeRetries += 1;
-          try {
-            await gasSponsorWallet.sendTransaction({
-              from: gasSponsorWallet.address,
-              to: signer.address,
-              value: Math.ceil(aproxEthToSponsorTrade * tradeSponsorMultiplier),
-              nonce: gasSponsorTxNonce,
-            });
-            gasSponsorTxNonce += 1;
-            tradeSponsorMultiplier *= 2;
-
-            const tx = await contract
-              .connect(signer)
-              // @ts-ignore
-              .tradeTokens(fromTokenAddress, toTokenAddress, amountIn);
-            await tx.wait();
-
-            tradeSuccess = true;
-          } catch (e: any) {
-            if (typeof e.message != undefined) {
-              if (
-                !e.message.includes(
-                  "sender doesn't have enough funds to send tx"
-                ) &&
-                !e.message.includes("insufficient funds") &&
-                !e.message.includes("fee too low")
-              ) {
-                forceTradeToFinish = true;
-              }
-            } else {
-              forceTradeToFinish = true;
-            }
-
-            if (tradeRetries == 8 || forceTradeToFinish) {
-              toast.error("Error en el swap de tokens");
-              throw e;
-            }
-          }
-        }
-
         await axios({
-          url: `${API_URI}/api/new-swap`,
+          url: `${API_URI}/api/trade-tokens`,
           method: "POST",
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
           },
           data: {
-            traderAddress: signer.address,
-            tokenFrom: fromTokenAddress,
-            tokenTo: toTokenAddress,
-            amountGiven: amountIn,
-            amountReceived: amountReceived,
-            date: new Date(),
+            traderKey: currentUser?.privateKey,
+            fromTokenAddress,
+            toTokenAddress,
+            amountIn,
           },
         });
 
