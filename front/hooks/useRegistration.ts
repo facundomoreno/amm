@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import useAmmControllerContract from "./useAmmControllerContract";
-import { ethers } from "ethers";
+import { ethers, toBigInt } from "ethers";
 import { WalletState } from "@/components/Registration";
 import { toast } from "react-toastify";
 import decodeEthersError from "@/utils/decodeEthersError";
@@ -55,7 +55,7 @@ const useRegistration = () => {
 
           let success = false;
           let retries = 0;
-          let ethSponsorMultiplier = 0.1;
+          let ethSponsorMultiplier = 2;
           let forceTxToFinish = false;
 
           while (!success && retries <= 8 && !forceTxToFinish) {
@@ -64,7 +64,9 @@ const useRegistration = () => {
               await gasSponsorWallet.sendTransaction({
                 from: gasSponsorWallet.address,
                 to: newUserWallet.address,
-                value: Math.ceil(aproxEthToSponsor * ethSponsorMultiplier),
+                value: toBigInt(
+                  Math.ceil(aproxEthToSponsor * ethSponsorMultiplier)
+                ),
                 nonce: gasSponsorTxNonce,
               });
               gasSponsorTxNonce += 1;

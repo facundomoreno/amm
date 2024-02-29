@@ -2,11 +2,12 @@
 
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import { AccountType, AuthContext } from "@/context/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Header from "./Header";
 
 const LayoutUseClient = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
+  const path = usePathname();
 
   const [currentUser, setCurrentUser] = useState<AccountType | null>(null);
 
@@ -34,9 +35,13 @@ const LayoutUseClient = ({ children }: { children: ReactNode }) => {
       const currentUserInStorage = localStorage.getItem("currentUser");
       if (currentUserInStorage) {
         setCurrentUser(JSON.parse(currentUserInStorage));
-        router.push("/");
+        if (path.includes("auth")) {
+          router.push("/");
+        }
       } else {
-        router.push("/auth");
+        if (!path.includes("auth")) {
+          router.push("/auth");
+        }
       }
     }
   }, []);

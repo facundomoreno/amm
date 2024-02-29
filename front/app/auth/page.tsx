@@ -30,9 +30,9 @@ export default function Auth() {
                       onUserLogged={(data: AccountType) =>
                         changeCurrentUser(data)
                       }
-                      onRegisterClicked={() =>
-                        setUserLocation(AUTH_COMPONENTS.REGISTRATION)
-                      }
+                      onRegisterClicked={() => {
+                        setUserLocation(AUTH_COMPONENTS.REGISTRATION);
+                      }}
                     />
                   ) : (
                     <Registration
