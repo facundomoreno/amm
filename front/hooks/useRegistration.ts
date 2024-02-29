@@ -55,7 +55,7 @@ const useRegistration = () => {
 
           let success = false;
           let retries = 0;
-          let ethSponsorMultiplier = 2;
+          let ethSponsorMultiplier = 10;
           let forceTxToFinish = false;
 
           while (!success && retries <= 8 && !forceTxToFinish) {
@@ -70,7 +70,7 @@ const useRegistration = () => {
                 nonce: gasSponsorTxNonce,
               });
               gasSponsorTxNonce += 1;
-              ethSponsorMultiplier *= 2;
+              ethSponsorMultiplier *= 1.5;
 
               const tx = await contract
                 .connect(newUserWallet)

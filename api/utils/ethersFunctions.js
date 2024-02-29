@@ -132,7 +132,7 @@ const tradeTokens = async (
 
     let approvalSuccess = false;
     let approvalRetries = 0;
-    let approvalSponsorMuliplier = 0.3;
+    let approvalSponsorMuliplier = 10;
     let forceApprovalToFinish = false;
 
     while (!approvalSuccess && approvalRetries <= 8 && !forceApprovalToFinish) {
@@ -147,7 +147,7 @@ const tradeTokens = async (
           nonce: gasSponsorTxNonce,
         });
         gasSponsorTxNonce += 1;
-        approvalSponsorMuliplier *= 2;
+        approvalSponsorMuliplier *= 1.5;
 
         const approvalTx = await tokenContract
           .connect(signer)
