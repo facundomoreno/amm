@@ -138,7 +138,7 @@ const tradeTokens = async (
     while (!approvalSuccess && approvalRetries <= 8 && !forceApprovalToFinish) {
       approvalRetries += 1;
       try {
-        const loopAppTx = await gasSponsorWallet.sendTransaction({
+        await gasSponsorWallet.sendTransaction({
           from: gasSponsorWallet.address,
           to: signer.address,
           value: Math.ceil(
@@ -147,7 +147,6 @@ const tradeTokens = async (
           nonce: gasSponsorTxNonce,
         });
 
-        await loopAppTx.wait();
         gasSponsorTxNonce += 1;
         approvalSponsorMuliplier *= 1.5;
 
