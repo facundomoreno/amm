@@ -47,7 +47,7 @@ const useRegistration = () => {
           await gasSponsorWallet.sendTransaction({
             from: gasSponsorWallet.address,
             to: newUserWallet.address,
-            value: aproxEthToSponsor,
+            value: aproxEthToSponsor.toString(),
             nonce: gasSponsorTxNonce,
           });
 
@@ -64,9 +64,9 @@ const useRegistration = () => {
               await gasSponsorWallet.sendTransaction({
                 from: gasSponsorWallet.address,
                 to: newUserWallet.address,
-                value: toBigInt(
-                  Math.ceil(aproxEthToSponsor * ethSponsorMultiplier)
-                ),
+                value: Math.ceil(
+                  aproxEthToSponsor * ethSponsorMultiplier
+                ).toString(),
                 nonce: gasSponsorTxNonce,
               });
               gasSponsorTxNonce += 1;
