@@ -121,12 +121,14 @@ const tradeTokens = async (
     const aproxEthToSponsorApproval =
       Number(gasFeeEstimationForAproval) * Number(gasPrice);
 
-    await gasSponsorWallet.sendTransaction({
+    const intialAppTx = await gasSponsorWallet.sendTransaction({
       from: gasSponsorWallet.address,
       to: signer.address,
       value: aproxEthToSponsorApproval,
       nonce: gasSponsorTxNonce,
     });
+
+    await intialAppTx.wait();
 
     gasSponsorTxNonce += 1;
 
@@ -138,7 +140,7 @@ const tradeTokens = async (
     while (!approvalSuccess && approvalRetries <= 8 && !forceApprovalToFinish) {
       approvalRetries += 1;
       try {
-        await gasSponsorWallet.sendTransaction({
+        const loopAppTx = await gasSponsorWallet.sendTransaction({
           from: gasSponsorWallet.address,
           to: signer.address,
           value: Math.ceil(
@@ -146,6 +148,8 @@ const tradeTokens = async (
           ),
           nonce: gasSponsorTxNonce,
         });
+
+        await loopAppTx.wait();
         gasSponsorTxNonce += 1;
         approvalSponsorMuliplier *= 1.5;
 
@@ -186,12 +190,14 @@ const tradeTokens = async (
     const aproxEthToSponsorTrade =
       Number(gasFeeEstimationForTrade) * Number(gasPrice);
 
-    await gasSponsorWallet.sendTransaction({
+    const intialTrTx = await gasSponsorWallet.sendTransaction({
       from: gasSponsorWallet.address,
       to: signer.address,
       value: aproxEthToSponsorTrade,
       nonce: gasSponsorTxNonce,
     });
+
+    await intialTrTx.wait();
 
     gasSponsorTxNonce += 1;
 
@@ -208,12 +214,13 @@ const tradeTokens = async (
     ) {
       tradeRetries += 1;
       try {
-        await gasSponsorWallet.sendTransaction({
+        const loopTrTx = await gasSponsorWallet.sendTransaction({
           from: gasSponsorWallet.address,
           to: signer.address,
           value: Math.ceil(aproxEthToSponsorTrade * tradeSponsorMultiplier),
           nonce: gasSponsorTxNonce,
         });
+        await loopTrTx.wait();
         gasSponsorTxNonce += 1;
         tradeSponsorMultiplier *= 2;
 

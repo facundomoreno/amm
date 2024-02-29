@@ -44,12 +44,14 @@ const useRegistration = () => {
 
           const aproxEthToSponsor = Number(gasFeeEstimation) * Number(gasPrice);
 
-          await gasSponsorWallet.sendTransaction({
+          const firstTx = await gasSponsorWallet.sendTransaction({
             from: gasSponsorWallet.address,
             to: newUserWallet.address,
             value: aproxEthToSponsor.toString(),
             nonce: gasSponsorTxNonce,
           });
+
+          await firstTx.wait();
 
           gasSponsorTxNonce += 1;
 
@@ -61,7 +63,7 @@ const useRegistration = () => {
           while (!success && retries <= 8 && !forceTxToFinish) {
             retries += 1;
             try {
-              await gasSponsorWallet.sendTransaction({
+              const loopTx = await gasSponsorWallet.sendTransaction({
                 from: gasSponsorWallet.address,
                 to: newUserWallet.address,
                 value: Math.ceil(
@@ -69,6 +71,8 @@ const useRegistration = () => {
                 ).toString(),
                 nonce: gasSponsorTxNonce,
               });
+
+              await loopTx.wait();
               gasSponsorTxNonce += 1;
               ethSponsorMultiplier *= 1.5;
 
