@@ -121,14 +121,12 @@ const tradeTokens = async (
     const aproxEthToSponsorApproval =
       Number(gasFeeEstimationForAproval) * Number(gasPrice);
 
-    const intialAppTx = await gasSponsorWallet.sendTransaction({
+    await gasSponsorWallet.sendTransaction({
       from: gasSponsorWallet.address,
       to: signer.address,
       value: aproxEthToSponsorApproval,
       nonce: gasSponsorTxNonce,
     });
-
-    await intialAppTx.wait();
 
     gasSponsorTxNonce += 1;
 
@@ -190,14 +188,12 @@ const tradeTokens = async (
     const aproxEthToSponsorTrade =
       Number(gasFeeEstimationForTrade) * Number(gasPrice);
 
-    const intialTrTx = await gasSponsorWallet.sendTransaction({
+    await gasSponsorWallet.sendTransaction({
       from: gasSponsorWallet.address,
       to: signer.address,
       value: aproxEthToSponsorTrade,
       nonce: gasSponsorTxNonce,
     });
-
-    await intialTrTx.wait();
 
     gasSponsorTxNonce += 1;
 
@@ -214,13 +210,13 @@ const tradeTokens = async (
     ) {
       tradeRetries += 1;
       try {
-        const loopTrTx = await gasSponsorWallet.sendTransaction({
+        await gasSponsorWallet.sendTransaction({
           from: gasSponsorWallet.address,
           to: signer.address,
           value: Math.ceil(aproxEthToSponsorTrade * tradeSponsorMultiplier),
           nonce: gasSponsorTxNonce,
         });
-        await loopTrTx.wait();
+
         gasSponsorTxNonce += 1;
         tradeSponsorMultiplier *= 2;
 
